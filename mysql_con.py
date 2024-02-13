@@ -6,12 +6,13 @@ def handle_login(hostname,username , passw , port=3306):
         connection = mysql.connector.connect(host=hostname , user=username , password=passw , port=port)
         if isinstance(connection , mysql.connector.connection.MySQLConnection) :
             globals()["global_connection"]= connection
-            return "succesful"
+            print("succesful connection")
+            return True
 
         else :
-            return ""
+            return False
     except mysql.connector.Error as err:
         print(err)
-        return ""
+        return False
 
 
