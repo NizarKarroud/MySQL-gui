@@ -18,7 +18,6 @@ def handle_login(hostname,username , passw , port=3306,db=""):
             globals()["db"] = db   
             print("succesful connection")
             return True
-
         else :
             return False
     except mysql.connector.Error as err:

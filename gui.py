@@ -16,7 +16,7 @@ def db_creation_success(db_create_entry):
 def show_db_tables(db_name):
     con = mysql_con.handle_login(hostname= mysql_con.hostname ,username= mysql_con.username,passw=mysql_con.passowrd , port=mysql_con.port , db=db_name) 
     if con == True :
-        mysql_con.show_tables(db_name)
+        return mysql_con.show_tables(db_name)
 
 
 def create_login_page(): 
@@ -54,15 +54,17 @@ def database_menu():
     create_database_button.pack(side="top", pady=(5,50))
 
     databases = mysql_con.show_databases()
-    databases_buttons = [customtkinter.CTkButton(menu_frame,text=database , fg_color="#1929E6", command=lambda :tables_frame(database)).pack(side="top", pady=10) for database in databases]
+    databases_buttons = [customtkinter.CTkButton(menu_frame,text=database , fg_color="#1929E6", command=lambda :tables_frame(database[0])).pack(side="top", pady=10) for database in databases]
+
 
 def tables_frame(db_name):
     table_frame = customtkinter.CTkScrollableFrame(master=app)
     table_frame.grid(row=0, column=1 , sticky="nswe")
     app.grid_columnconfigure(1, weight=1) 
-    app.grid_rowconfigure(0, weight=1) 
-    tables = mysql_con.show_tables(db_name)
-    tables_buttons = [customtkinter.CTkButton(table_frame,text=table[0] , fg_color="#1929E6", ).pack(side="top", pady=10) for table in tables]
+    app.grid_rowconfigure(0, weight=1)
+
+    tables = show_db_tables(db_name)
+    tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6").pack(side="top", pady=10) for table in tables]
 
 
 app = customtkinter.CTk()
