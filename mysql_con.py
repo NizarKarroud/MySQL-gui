@@ -16,3 +16,13 @@ def handle_login(hostname,username , passw , port=3306):
         return False
 
 
+def show_databases():
+    try :
+        con_cursor = global_connection.cursor() 
+        con_cursor.execute("SHOW DATABASES")
+        databases = con_cursor.fetchall()
+        con_cursor.reset()
+        return databases
+    except Exception as err :
+        print(err)
+

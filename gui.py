@@ -5,10 +5,10 @@ def login_success(frame , host_entry  ,port_entry ,username_entry , password_ent
     con = mysql_con.handle_login(hostname= host_entry.get(),username= username_entry.get(),passw= password_entry.get() , port=port_entry.get())
     if con == True :
         frame.destroy()
-
+        database_menu()
 
 app = customtkinter.CTk()
-app.geometry("800x600")
+app.geometry("1024x768")
 
 def create_login_page(): 
     frame = customtkinter.CTkFrame(master=app)
@@ -32,6 +32,18 @@ def create_login_page():
 
     login_button= customtkinter.CTkButton(master=frame , text="Login" , command= lambda:login_success(frame , host_entry , port_entry , username_entry , password_entry))
     login_button.pack(padx=10,pady=22 )
+
+def database_menu():
+    menu_frame = customtkinter.CTkFrame(master=app)
+    menu_frame.pack(pady=20 , padx=60 ,  expand=True)
+    label_database = customtkinter.CTkLabel(master=menu_frame, text=mysql_con.show_databases())
+    label_database.pack(padx=20 , pady=22)
+
+
+
+
+
+
 create_login_page()
 
 app.mainloop()
