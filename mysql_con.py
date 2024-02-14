@@ -26,3 +26,11 @@ def show_databases():
     except Exception as err :
         print(err)
 
+def create_database(my_db):
+    try :
+        con_cursor = con_cursor = global_connection.cursor() 
+        con_cursor.execute(f"CREATE DATABASE {my_db}")
+        return True
+    except Exception as err :
+        print(err)
+        return False

@@ -7,6 +7,17 @@ def login_success(frame , host_entry  ,port_entry ,username_entry , password_ent
         frame.destroy()
         database_menu()
 
+
+def db_creation_success(db_create_entry):
+    cr = mysql_con.create_database(db_create_entry.get())
+    if cr == True :
+        database_menu()
+
+
+
+
+
+
 app = customtkinter.CTk()
 app.geometry("1024x768")
 
@@ -34,10 +45,18 @@ def create_login_page():
     login_button.pack(padx=10,pady=22 )
 
 def database_menu():
-    menu_frame = customtkinter.CTkFrame(master=app)
-    menu_frame.pack(pady=20 , padx=60 ,  expand=True)
-    label_database = customtkinter.CTkLabel(master=menu_frame, text=mysql_con.show_databases())
-    label_database.pack(padx=20 , pady=22)
+    menu_frame = customtkinter.CTkScrollableFrame(master=app)
+    menu_frame.grid(row=0, column=0 , sticky="ns")
+    app.grid_rowconfigure(0, weight=1) 
+
+    db_create_entry = customtkinter.CTkEntry(menu_frame, placeholder_text="New database name" , height=35 )
+    db_create_entry.pack(pady=(60,0)) 
+
+    create_database_button = customtkinter.CTkButton(menu_frame,text="Create a new Database" , fg_color="#7019E6",command=lambda:db_creation_success(db_create_entry))
+    create_database_button.pack(side="top", pady=(5,50))
+
+    databases = mysql_con.show_databases()
+    databases_buttons = [customtkinter.CTkButton(menu_frame,text=database , fg_color="#1929E6").pack(side="top", pady=10) for database in databases]
 
 
 
