@@ -17,6 +17,13 @@ def show_db_tables(db_name):
     con = mysql_con.handle_login(hostname= mysql_con.hostname ,username= mysql_con.username,passw=mysql_con.passowrd , port=mysql_con.port , db=db_name) 
     if con == True :
         return mysql_con.show_tables(db_name)
+    
+
+def drop_db(frame,db_name):
+    dropped = mysql_con.drop_db(db_name)
+    if dropped ==True :
+        frame.destroy()
+        database_menu()
 
 
 def create_login_page(): 
@@ -64,7 +71,10 @@ def tables_frame(db_name):
     app.grid_rowconfigure(0, weight=1)
 
     tables = show_db_tables(db_name)
-    tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6").pack(side="top", pady=10) for table in tables]
+    tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6" , command=lambda : ...).pack(side="top", pady=10) for table in tables]
+
+    drop_db_button = customtkinter.CTkButton(table_frame , text="Drop database" , fg_color="#ff0000"  , command=lambda: drop_db(table_frame,db_name))
+    drop_db_button.place(relx=1, rely=0, anchor="ne")
 
 
 app = customtkinter.CTk()

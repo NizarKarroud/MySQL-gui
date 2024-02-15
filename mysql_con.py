@@ -53,3 +53,14 @@ def show_tables(db_name):
         return tables
     except Exception as err:
         print(err)
+
+def drop_db(db_name):
+    try :
+        con_cursor = global_connection.cursor()
+        con_cursor.execute(f"DROP DATABASE {db_name}")
+        return True
+    except Exception as err:
+        print(err)
+
+def show_columns(tb_name):
+    ...
