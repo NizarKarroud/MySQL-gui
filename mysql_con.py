@@ -8,7 +8,7 @@ db = None
 
 def handle_login(hostname,username , passw , port=3306,db=None):
     try : 
-        connection = mysql.connector.connect(host=hostname , user=username , password=passw , port=port ,database=db)
+        connection = mysql.connector.connect(host=hostname , user=username , password=passw , port=port ,database=db, auth_plugin='mysql_native_password')
         if isinstance(connection , mysql.connector.connection.MySQLConnection) :
             globals()["global_connection"]= connection
             globals()["hostname"] = hostname
