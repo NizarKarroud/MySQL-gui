@@ -54,7 +54,7 @@ def database_menu():
     create_database_button.pack(side="top", pady=(5,50))
 
     databases = mysql_con.show_databases()
-    databases_buttons = [customtkinter.CTkButton(menu_frame,text=database , fg_color="#1929E6", command=lambda :tables_frame(database[0])).pack(side="top", pady=10) for database in databases]
+    databases_buttons = [customtkinter.CTkButton(menu_frame,text=database , fg_color="#1929E6", command=lambda db=database: tables_frame(db[0])).pack(side="top", pady=10) for database in databases]
 
 
 def tables_frame(db_name):

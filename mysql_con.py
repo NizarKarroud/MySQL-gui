@@ -6,7 +6,7 @@ passowrd = None
 port = None
 db = None
 
-def handle_login(hostname,username , passw , port=3306,db=""):
+def handle_login(hostname,username , passw , port=3306,db=None):
     try : 
         connection = mysql.connector.connect(host=hostname , user=username , password=passw , port=port ,database=db)
         if isinstance(connection , mysql.connector.connection.MySQLConnection) :
