@@ -70,11 +70,15 @@ def tables_frame(db_name):
     app.grid_columnconfigure(1, weight=1) 
     app.grid_rowconfigure(0, weight=1)
 
+    
+    button_frame = customtkinter.CTkFrame(master=table_frame)
+    button_frame.pack(anchor="ne", padx=10, pady=10)
+
+    drop_db_button = customtkinter.CTkButton(button_frame , text="Drop database" , fg_color="#ff0000"  , command=lambda: drop_db(table_frame,db_name))
+    drop_db_button.pack()
+
     tables = show_db_tables(db_name)
     tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6" , command=lambda : ...).pack(side="top", pady=10) for table in tables]
-
-    drop_db_button = customtkinter.CTkButton(table_frame , text="Drop database" , fg_color="#ff0000"  , command=lambda: drop_db(table_frame,db_name))
-    drop_db_button.place(relx=1, rely=0, anchor="ne")
 
 
 app = customtkinter.CTk()
