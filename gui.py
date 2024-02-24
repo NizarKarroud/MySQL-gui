@@ -1,7 +1,6 @@
 import customtkinter
 import mysql_con
-
-frames_list = []
+from CTkTable import *
 
 def login_success(frame , host_entry  ,port_entry ,username_entry , password_entry ) :
     con = mysql_con.handle_login(hostname= host_entry.get(),username= username_entry.get(),passw= password_entry.get() , port=port_entry.get())
@@ -27,11 +26,8 @@ def drop_db(frame,db_name):
         frame.destroy()
         database_menu()
 
-def show_columns(table):
-    for frame in frames_list :
-        frame.destroy()
-    # frames_list[:] = [frame for frame in frames_list if not frame.winfo_exists()]
-
+def show_columns(table_frame,table):
+    table_frame.destroy()
     columns_frame(table)
 
 def create_login_page(): 
@@ -57,11 +53,12 @@ def create_login_page():
     login_button= customtkinter.CTkButton(master=frame , text="Login" , command= lambda:login_success(frame , host_entry , port_entry , username_entry , password_entry))
     login_button.pack(padx=10,pady=22 )
 
+
+
 def database_menu():
     menu_frame = customtkinter.CTkScrollableFrame(master=app)
     menu_frame.grid(row=0, column=0 , sticky="ns")
     app.grid_rowconfigure(0, weight=1) 
-    frames_list.append(menu_frame)
 
     db_create_entry = customtkinter.CTkEntry(menu_frame, placeholder_text="New database name" , height=35 )
     db_create_entry.pack(pady=(60,0)) 
@@ -79,38 +76,48 @@ def tables_frame(db_name):
     app.grid_columnconfigure(1, weight=1) 
     app.grid_rowconfigure(0, weight=1)
 
-    frames_list.append(table_frame)
 
-    button_frame = customtkinter.CTkFrame(master=table_frame)
-    button_frame.pack(anchor="ne", padx=10, pady=10)
+    drop_button_frame = customtkinter.CTkFrame(master=table_frame)
+    drop_button_frame.pack(anchor="ne", padx=10, pady=10)
 
-    frames_list.append(button_frame)
+    create_table_frame = customtkinter.CTkFrame(master=table_frame)
+    create_table_frame.pack(anchor="ne" ,padx=10 , pady=15)
 
-    drop_db_button = customtkinter.CTkButton(button_frame , text="Drop database" , fg_color="#ff0000"  , command=lambda: drop_db(table_frame,db_name))
+    create_table_button =customtkinter.CTkButton(create_table_frame , text="Create new Table" , fg_color="#ff0000" , command=lambda:table_create_page(table_frame))
+    create_table_button.pack()
+    drop_db_button = customtkinter.CTkButton(drop_button_frame , text="Drop database" , fg_color="#ff0000"  , command=lambda: drop_db(table_frame,db_name))
     drop_db_button.pack()
 
     tables = show_db_tables(db_name)
-    tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6" , command=lambda : show_columns(table[0])).pack(side="top", pady=10) for table in tables]
+    tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6" , command=lambda : show_columns(table_frame,table[0])).pack(side="top", pady=10) for table in tables]
+
+
+def table_create_page(frame):
+    frame.destroy()
+    newtb_create_frame = customtkinter.CTkScrollableFrame(master=app)
 
 
 def columns_frame(table):
-    ...
-
     column_frame = customtkinter.CTkScrollableFrame(master=app)
-    column_frame.grid(row=0, column=0 , sticky="nswe")
+    column_frame.grid(row=0, column=1 , sticky="nswe")
     app.grid_columnconfigure(1, weight=1) 
     app.grid_rowconfigure(0, weight=1)
 
-    back_button_frame = customtkinter.CTkFrame(master=column_frame)
-    back_button_frame.pack(anchor="nw", padx=10, pady=10)
+    columns , rows = mysql_con.show_table_records(table)
 
-    back_button = customtkinter.CTkButton(back_button_frame , text="Back" , fg_color="#1929E6" , command=lambda : ...)
-    back_button.pack()
+    if columns is not None and rows is not None :
 
+        ctk_table = CTkTable(master=column_frame, row=len(rows), column=len(columns))
+        ctk_table.grid(row=0, column=0, sticky="nsew") 
+        column_frame.grid_rowconfigure(0, weight=1)
+        column_frame.grid_columnconfigure(0, weight=1)
 
-
-
-
+        ctk_table.add_row(columns , 0)
+        for i, row_data in enumerate(rows, start=1):
+            for j, value in enumerate(row_data):
+        # Insert data into the table starting from the first row
+                ctk_table.insert(i, j, value)
+ 
 app = customtkinter.CTk()
 app.geometry("1024x768")
 

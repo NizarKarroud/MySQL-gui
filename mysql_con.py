@@ -1,4 +1,9 @@
 import mysql.connector
+import pandas as pd
+
+pd.set_option('display.max_rows', None)  # Set to None for unlimited rows
+pd.set_option('display.max_columns', None)  # Set to None for unlimited columns
+
 global_connection = None
 hostname = None
 username = None
@@ -64,3 +69,15 @@ def drop_db(db_name):
 
 def show_columns(tb_name):
     ...
+
+def show_table_records(table):
+    try :
+        con_cursor = global_connection.cursor()
+        con_cursor.execute(f"SELECT * FROM {table}")
+        rows = con_cursor.fetchall()
+        columns = [i[0] for i in con_cursor.description]
+        return columns,rows
+    except Exception as err:
+        print(err)
+        return None
+
