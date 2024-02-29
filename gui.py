@@ -3,6 +3,7 @@ import mysql_con
 from tkinter import ttk
 import tkinter as tk
 import ttkbootstrap
+
 def login_success(frame , host_entry  ,port_entry ,username_entry , password_entry ) :
     con = mysql_con.handle_login(hostname= host_entry.get(),username= username_entry.get(),passw= password_entry.get() , port=port_entry.get())
     if con == True :
@@ -90,8 +91,8 @@ def tables_frame(db_name):
     drop_db_button.pack()
 
     tables = show_db_tables(db_name)
-    tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6" , command=lambda : show_columns(table_frame,table[0])).pack(side="top", pady=10) for table in tables]
- 
+
+    tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6" , command=lambda table=table[0] : show_columns(table_frame,table)).pack(side="top", pady=10) for table in tables]
     # there is a bug here i think the table var that is being sent isnt correct 
 
 def table_create_page(frame):
@@ -100,6 +101,7 @@ def table_create_page(frame):
 
 
 def columns_frame(table):
+    print(table)
     columns , rows = mysql_con.show_table_records(table)
     style = ttkbootstrap.Style(theme="darkly")
     treeframe = ttk.Frame(app)
