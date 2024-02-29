@@ -1,7 +1,8 @@
 import customtkinter
 import mysql_con
-from CTkTable import *
-
+from tkinter import ttk
+import tkinter as tk
+import ttkbootstrap
 def login_success(frame , host_entry  ,port_entry ,username_entry , password_entry ) :
     con = mysql_con.handle_login(hostname= host_entry.get(),username= username_entry.get(),passw= password_entry.get() , port=port_entry.get())
     if con == True :
@@ -90,7 +91,8 @@ def tables_frame(db_name):
 
     tables = show_db_tables(db_name)
     tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6" , command=lambda : show_columns(table_frame,table[0])).pack(side="top", pady=10) for table in tables]
-
+ 
+    # there is a bug here i think the table var that is being sent isnt correct 
 
 def table_create_page(frame):
     frame.destroy()
@@ -98,25 +100,36 @@ def table_create_page(frame):
 
 
 def columns_frame(table):
-    column_frame = customtkinter.CTkScrollableFrame(master=app)
-    column_frame.grid(row=0, column=1 , sticky="nswe")
-    app.grid_columnconfigure(1, weight=1) 
-    app.grid_rowconfigure(0, weight=1)
-
     columns , rows = mysql_con.show_table_records(table)
+    style = ttkbootstrap.Style(theme="darkly")
+    treeframe = ttk.Frame(app)
+    treeframe.grid(column= 1  , row=0 , sticky = "nswe")
+    app.grid_rowconfigure(0, weight=1) 
+    app.grid_columnconfigure(1, weight=1) 
 
-    if columns is not None and rows is not None :
+    style.theme_use()
+    # Add vertical scrollbar
+    tree_y_Scrollbar = ttk.Scrollbar(treeframe , orient="vertical")
+    tree_y_Scrollbar.pack(side="right",fill="y")
 
-        ctk_table = CTkTable(master=column_frame, row=len(rows), column=len(columns))
-        ctk_table.grid(row=0, column=0, sticky="nsew") 
-        column_frame.grid_rowconfigure(0, weight=1)
-        column_frame.grid_columnconfigure(0, weight=1)
+    # Add horizontal scrollbar
+    tree_x_Scrollbar = ttk.Scrollbar(treeframe , orient="horizontal")
+    tree_x_Scrollbar.pack(fill="x" , side="bottom")
 
-        ctk_table.add_row(columns , 0)
-        for i, row_data in enumerate(rows, start=1):
-            for j, value in enumerate(row_data):
-        # Insert data into the table starting from the first row
-                ctk_table.insert(i, j, value)
+    # Create a Treeview widget
+    treeview = ttk.Treeview(treeframe,show='headings', xscrollcommand=tree_x_Scrollbar.set ,yscrollcommand= tree_y_Scrollbar.set,  columns=columns ,height=len(rows))
+    treeview.pack()
+
+    for column in columns :
+        treeview.column(column, anchor="center")
+        treeview.heading(column , text=column)
+
+    # Insert data into the treeview
+    for row in rows :
+        treeview.insert("" , tk.END , values=row)
+    tree_y_Scrollbar.config(command=treeview.yview)
+    tree_x_Scrollbar.config(command=treeview.xview)
+
  
 app = customtkinter.CTk()
 app.geometry("1024x768")
