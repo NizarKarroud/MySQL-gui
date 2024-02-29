@@ -1,8 +1,5 @@
 import mysql.connector
-import pandas as pd
 
-pd.set_option('display.max_rows', None)  # Set to None for unlimited rows
-pd.set_option('display.max_columns', None)  # Set to None for unlimited columns
 
 global_connection = None
 hostname = None
