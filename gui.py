@@ -5,7 +5,8 @@ import tkinter as tk
 import ttkbootstrap
 
 def login_success(frame , host_entry  ,port_entry ,username_entry , password_entry ) :
-    con = mysql_con.handle_login(hostname= host_entry.get(),username= username_entry.get(),passw= password_entry.get() , port=port_entry.get())
+    con = mysql_con.handle_login(hostname= 'localhost',username='root',passw= 'root' , port="3306")
+    # hostname= host_entry.get(),username= username_entry.get(),passw= password_entry.get() , port=port_entry.get()
     if con == True :
         frame.destroy()
         database_menu()
@@ -54,7 +55,7 @@ def create_login_page():
 
     login_button= customtkinter.CTkButton(master=frame , text="Login" , command= lambda:login_success(frame , host_entry , port_entry , username_entry , password_entry))
     login_button.pack(padx=10,pady=22 )
-
+    login_button.bind('<Return>' , lambda:login_success(frame , host_entry , port_entry , username_entry , password_entry) )
 
 
 def database_menu():
@@ -85,23 +86,52 @@ def tables_frame(db_name):
     create_table_frame = customtkinter.CTkFrame(master=table_frame)
     create_table_frame.pack(anchor="ne" ,padx=10 , pady=15)
 
-    create_table_button =customtkinter.CTkButton(create_table_frame , text="Create new Table" , fg_color="#ff0000" , command=lambda:table_create_page(table_frame))
+    create_table_button =customtkinter.CTkButton(create_table_frame , text="Create new Table" , fg_color="#ff0000" , command=lambda:table_create_page((table_frame , drop_button_frame , create_table_frame)))
     create_table_button.pack()
+
     drop_db_button = customtkinter.CTkButton(drop_button_frame , text="Drop database" , fg_color="#ff0000"  , command=lambda: drop_db(table_frame,db_name))
     drop_db_button.pack()
 
     tables = show_db_tables(db_name)
 
     tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6" , command=lambda table=table[0] : show_columns(table_frame,table)).pack(side="top", pady=10) for table in tables]
-    # there is a bug here i think the table var that is being sent isnt correct 
 
-def table_create_page(frame):
-    frame.destroy()
-    newtb_create_frame = customtkinter.CTkScrollableFrame(master=app)
+def table_create_page(frames):
+    for frame in frames :
+        frame.destroy()
+    style = ttkbootstrap.Style(theme="darkly")
+    table_name_frame = customtkinter.CTkFrame(app)
+    table_name_frame.grid(column= 1  , row=0 , sticky = "nswe")
+    app.grid_rowconfigure(0, weight=1) 
+    app.grid_columnconfigure(1, weight=1) 
+
+    # style.theme_use()
+    create_column_frame = customtkinter.CTkFrame(table_name_frame)
+    create_column_frame.grid(column= 0  , row=0 , sticky = "ew" , columnspan=2)
+    table_name_frame.grid_columnconfigure(0, weight=1)  
+
+
+    table_name_entry = customtkinter.CTkEntry(create_column_frame, placeholder_text="Table name" , height=35)
+    table_name_entry.grid(column= 0  , row=0 , padx=20 , pady=20)
+
+    column_number = customtkinter.CTkEntry(create_column_frame, placeholder_text="Numbers of Columns" , height=35)
+    column_number.grid(column= 1  , row=0  , padx=20 , pady=20)
+
+    # Add vertical scrollbar
+    # tree_y_Scrollbar = ttk.Scrollbar(mainframe , orient="vertical")
+    # tree_y_Scrollbar.pack(side="right",fill="y")
+
+    # # Add horizontal scrollbar
+    # tree_x_Scrollbar = ttk.Scrollbar(mainframe , orient="horizontal")
+    # tree_x_Scrollbar.pack(fill="x" , side="bottom")
+    
+    # tree_y_Scrollbar.config(command=mainframe.yview)
+    # tree_x_Scrollbar.config(command=mainframe.xview)
+
+   
 
 
 def columns_frame(table):
-    print(table)
     columns , rows = mysql_con.show_table_records(table)
     style = ttkbootstrap.Style(theme="darkly")
     treeframe = ttk.Frame(app)
@@ -129,6 +159,7 @@ def columns_frame(table):
     # Insert data into the treeview
     for row in rows :
         treeview.insert("" , tk.END , values=row)
+
     tree_y_Scrollbar.config(command=treeview.yview)
     tree_x_Scrollbar.config(command=treeview.xview)
 
