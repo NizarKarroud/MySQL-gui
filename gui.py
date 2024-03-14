@@ -4,16 +4,16 @@ from tkinter import ttk
 import tkinter as tk
 import ttkbootstrap
 
-def login_success(frame , host_entry  ,port_entry ,username_entry , password_entry ) :
-    con = mysql_con.handle_login(hostname= 'localhost',username='root',passw= 'root' , port="3306")
-    # hostname= host_entry.get(),username= username_entry.get(),passw= password_entry.get() , port=port_entry.get()
+def login_success(frame , hostname  ,port ,username , password ) :
+    con = mysql_con.handle_login(hostname= 'localhost',username='root',passw= 'root' , port="3306") 
+        # hostname= hostname ,username= username ,passw= password , port=port 
     if con == True :
         frame.destroy()
         database_menu()
 
 
 def db_creation_success(db_create_entry):
-    cr = mysql_con.create_database(db_create_entry.get())
+    cr = mysql_con.create_database(db_create_entry)
     if cr == True :
         database_menu()
 
@@ -34,28 +34,41 @@ def show_columns(table_frame,table):
     columns_frame(table)
 
 def create_login_page(): 
-    frame = customtkinter.CTkFrame(master=app)
+    frame = ttk.Frame(master=app)
     frame.pack(pady=20 , padx=60 , fill="both" , expand=True)
 
-    label = customtkinter.CTkLabel(master=frame, text="Login" , font=("Roboto" , 30))
+    label = ttk.Label(master=frame, text="Login" , font=("Roboto" , 30))
     label.pack(padx=20 , pady=22)
+    host_label = ttk.Label(master=frame, text="Hostname :")
+    host_label.pack(pady=10)
 
-    host_entry = customtkinter.CTkEntry(frame, placeholder_text="hostname" , height=35)
-    host_entry.pack(padx=10,pady=22)
+    hostname = tk.StringVar()
+    host_entry = ttk.Entry(frame, textvariable=hostname)
+    host_entry.pack(padx=10, pady=10)
 
-    port_entry = customtkinter.CTkEntry(frame, placeholder_text="port(3306 by default)" , height=35)
-    port_entry.pack(padx=10,pady=22)
+    port_label = ttk.Label(master=frame, text="Port :")
+    port_label.pack(pady=10)
 
+    port = tk.StringVar()
+    port_entry = ttk.Entry(frame, textvariable=port)
+    port_entry.pack(padx=10, pady=10)
 
-    username_entry= customtkinter.CTkEntry(frame, placeholder_text="Username" , height=35)
-    username_entry.pack(padx=10,pady=22)
+    username_label = ttk.Label(master=frame, text="Username :")
+    username_label.pack(pady=10)
 
-    password_entry= customtkinter.CTkEntry(frame, placeholder_text="Password" , show="*" , height=35)
-    password_entry.pack(padx=10,pady=22)
+    username = tk.StringVar()
+    username_entry = ttk.Entry(frame, textvariable=username)
+    username_entry.pack(padx=10, pady=10)
 
-    login_button= customtkinter.CTkButton(master=frame , text="Login" , command= lambda:login_success(frame , host_entry , port_entry , username_entry , password_entry))
-    login_button.pack(padx=10,pady=22 )
-    login_button.bind('<Return>' , lambda:login_success(frame , host_entry , port_entry , username_entry , password_entry) )
+    password_label = ttk.Label(master=frame, text="Password :")
+    password_label.pack(pady=10)
+
+    password = tk.StringVar()
+    password_entry = ttk.Entry(frame, textvariable=password, show='*')
+    password_entry.pack(padx=10, pady=10)
+
+    login_button = ttk.Button(master=frame, text="Login", command=lambda: login_success(frame, hostname.get(), port.get(), username.get(), password.get()))
+    login_button.pack(pady=10)
 
 
 def database_menu():
@@ -63,14 +76,15 @@ def database_menu():
     menu_frame.grid(row=0, column=0 , sticky="ns")
     app.grid_rowconfigure(0, weight=1) 
 
-    db_create_entry = customtkinter.CTkEntry(menu_frame, placeholder_text="New database name" , height=35 )
+    new_db = tk.StringVar()
+    db_create_entry = ttk.Entry(menu_frame, textvariable=new_db )
     db_create_entry.pack(pady=(60,0)) 
 
-    create_database_button = customtkinter.CTkButton(menu_frame,text="Create a new Database" , fg_color="#7019E6",command=lambda:db_creation_success(db_create_entry))
+    create_database_button = ttk.Button(menu_frame,text="Create a new Database" ,command=lambda:db_creation_success(new_db.get()))
     create_database_button.pack(side="top", pady=(5,50))
 
     databases = mysql_con.show_databases()
-    databases_buttons = [customtkinter.CTkButton(menu_frame,text=database , fg_color="#1929E6", command=lambda db=database: tables_frame(db[0])).pack(side="top", pady=10) for database in databases]
+    databases_buttons = [ttk.Button(menu_frame,text=database , command=lambda db=database: tables_frame(db[0])).pack(side="top", pady=10) for database in databases]
 
 
 def tables_frame(db_name):
@@ -80,66 +94,92 @@ def tables_frame(db_name):
     app.grid_rowconfigure(0, weight=1)
 
 
-    drop_button_frame = customtkinter.CTkFrame(master=table_frame)
+    drop_button_frame = ttk.Frame(master=table_frame)
     drop_button_frame.pack(anchor="ne", padx=10, pady=10)
 
-    create_table_frame = customtkinter.CTkFrame(master=table_frame)
+    create_table_frame = ttk.Frame(master=table_frame)
     create_table_frame.pack(anchor="ne" ,padx=10 , pady=15)
 
-    create_table_button =customtkinter.CTkButton(create_table_frame , text="Create new Table" , fg_color="#ff0000" , command=lambda:table_create_page((table_frame , drop_button_frame , create_table_frame)))
+    create_table_button =ttk.Button(create_table_frame , text="Create new Table" , command=lambda:table_create_page((table_frame , drop_button_frame , create_table_frame)))
     create_table_button.pack()
 
-    drop_db_button = customtkinter.CTkButton(drop_button_frame , text="Drop database" , fg_color="#ff0000"  , command=lambda: drop_db(table_frame,db_name))
+    drop_db_button = ttk.Button(drop_button_frame , text="Drop database" , command=lambda: drop_db(table_frame,db_name))
     drop_db_button.pack()
 
     tables = show_db_tables(db_name)
 
-    tables_buttons = [customtkinter.CTkButton(table_frame,text=table, fg_color="#1929E6" , command=lambda table=table[0] : show_columns(table_frame,table)).pack(side="top", pady=10) for table in tables]
+    tables_buttons = [ttk.Button(table_frame,text=table, command=lambda table=table[0] : show_columns(table_frame,table)).pack(side="top", pady=10) for table in tables]
 
 def table_create_page(frames):
     for frame in frames :
         frame.destroy()
-    style = ttkbootstrap.Style(theme="darkly")
+
     table_name_frame = customtkinter.CTkFrame(app)
     table_name_frame.grid(column= 1  , row=0 , sticky = "nswe")
+
     app.grid_rowconfigure(0, weight=1) 
     app.grid_columnconfigure(1, weight=1) 
 
-    # style.theme_use()
     create_column_frame = customtkinter.CTkFrame(table_name_frame)
     create_column_frame.grid(column= 0  , row=0 , sticky = "ew" , columnspan=2)
     table_name_frame.grid_columnconfigure(0, weight=1)  
 
+    treeframe = ttk.Frame(table_name_frame)
+    treeframe.grid(column= 1  , row=2 , sticky = "nswe" , columnspan=2)
+    table_name_frame.grid_rowconfigure(2, weight=1)  
+    table_name_frame.grid_columnconfigure(1, weight=1)
 
-    table_name_entry = customtkinter.CTkEntry(create_column_frame, placeholder_text="Table name" , height=35)
-    table_name_entry.grid(column= 0  , row=0 , padx=20 , pady=20)
+    tree_y_Scrollbar = ttk.Scrollbar(treeframe , orient="vertical")
+    tree_y_Scrollbar.pack(side="right",fill="y")
 
-    column_number = customtkinter.CTkEntry(create_column_frame, placeholder_text="Numbers of Columns" , height=35)
-    column_number.grid(column= 1  , row=0  , padx=20 , pady=20)
+    # Add horizontal scrollbar
+    tree_x_Scrollbar = ttk.Scrollbar(treeframe , orient="horizontal")
+    tree_x_Scrollbar.pack(fill="x" , side="bottom")
 
-    # Add vertical scrollbar
-    # tree_y_Scrollbar = ttk.Scrollbar(mainframe , orient="vertical")
-    # tree_y_Scrollbar.pack(side="right",fill="y")
+    columns = ["Name" , "Type" , "Length/Values" , "Null" , "Index" , "Reference" ]
+    # Create a Treeview widget
+    treeview = ttk.Treeview(treeframe,show='headings', xscrollcommand=tree_x_Scrollbar.set ,yscrollcommand= tree_y_Scrollbar.set,height=1 , columns=columns)
+    treeview.pack()
 
-    # # Add horizontal scrollbar
-    # tree_x_Scrollbar = ttk.Scrollbar(mainframe , orient="horizontal")
-    # tree_x_Scrollbar.pack(fill="x" , side="bottom")
-    
-    # tree_y_Scrollbar.config(command=mainframe.yview)
-    # tree_x_Scrollbar.config(command=mainframe.xview)
+    for column in columns :
+        treeview.column(column, anchor="center")
+        treeview.heading(column , text=column)
 
-   
+    execute_button = ttk.Button( create_column_frame , text='Execute' , command=...  )
+    execute_button.grid(row=0 , column=3 , padx=140)
+
+    tree_y_Scrollbar.config(command=treeview.yview)
+    tree_x_Scrollbar.config(command=treeview.xview)
+
+
+    def add_column():
+        column_name = tk.StringVar()
+        option = tk.StringVar()
+        type_values = ["TINYINT" , "SMALLINT" , "MEDIUMINT" , "BIGINT" , "DECIMAL" , "FLOAT" , "DOUBLE" , "REAL" , "BIT" , "BOOLEAN" , "DATE" , "SERIAL" , "DATETIME" , "TIMESTAMP" , "TIME", "YEAR" , "CHAR" , "VARCHAR" , "TINYTEXT" , "TEXT" , "MEDIUMTEXT" , "LONGTEXT" , "BINARY" , "VARBINARY" , "ENUM" , "SET" , "JSON"]
+        
+        # incomplete
+
+        row = [ttk.Entry(create_column_frame, textvariable=column_name) , ttk.OptionMenu(create_column_frame, variable=option)]
+        treeview.config(height=int(treeview.cget("height"))+1)
+        treeview.insert("" , tk.END , values=...)
+
+    table_label = ttk.Label(create_column_frame , text='Table Name : ')
+    table_label.grid(row=0 , column=0 , padx=30 , pady=30 )
+    table_name = tk.StringVar()
+    table_name_entry = ttk.Entry(create_column_frame, textvariable=table_name )
+    table_name_entry.grid(row=0 , column=1 , padx=(5,30) , pady=30)
+
+    column_number = ttk.Button(create_column_frame, text="Add column" , command=lambda: add_column())
+    column_number.grid(row=0 , column=2 , padx=30 , pady=30)
 
 
 def columns_frame(table):
     columns , rows = mysql_con.show_table_records(table)
-    style = ttkbootstrap.Style(theme="darkly")
     treeframe = ttk.Frame(app)
     treeframe.grid(column= 1  , row=0 , sticky = "nswe")
     app.grid_rowconfigure(0, weight=1) 
     app.grid_columnconfigure(1, weight=1) 
 
-    style.theme_use()
     # Add vertical scrollbar
     tree_y_Scrollbar = ttk.Scrollbar(treeframe , orient="vertical")
     tree_y_Scrollbar.pack(side="right",fill="y")
@@ -148,6 +188,7 @@ def columns_frame(table):
     tree_x_Scrollbar = ttk.Scrollbar(treeframe , orient="horizontal")
     tree_x_Scrollbar.pack(fill="x" , side="bottom")
 
+    
     # Create a Treeview widget
     treeview = ttk.Treeview(treeframe,show='headings', xscrollcommand=tree_x_Scrollbar.set ,yscrollcommand= tree_y_Scrollbar.set,  columns=columns ,height=len(rows))
     treeview.pack()
@@ -163,9 +204,21 @@ def columns_frame(table):
     tree_y_Scrollbar.config(command=treeview.yview)
     tree_x_Scrollbar.config(command=treeview.xview)
 
- 
-app = customtkinter.CTk()
+    treeview.bind('<Double-1>', lambda event , headers=columns: clicker(headers , treeview.item(treeview.selection())['values']))
+
+def clicker(headers , selected_row):
+    window = tk.Toplevel(app)
+    window.grab_set()
+    window.geometry("800x600")
+    print("Headers:", headers)
+    print("Selected Row:", selected_row)
+
+
+app = tk.Tk()
 app.geometry("1024x768")
+style = ttkbootstrap.Style(theme="darkly")
+style.theme_use()
+
 
 
 create_login_page()
