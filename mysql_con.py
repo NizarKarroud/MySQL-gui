@@ -64,8 +64,6 @@ def drop_db(db_name):
     except Exception as err:
         print(err)
 
-def show_columns(tb_name):
-    ...
 
 def show_table_records(table):
     try :
@@ -77,4 +75,22 @@ def show_table_records(table):
     except Exception as err:
         print(err)
         return None
+
+def alter_table(old_value , table, values , columns):
+    try :
+        values = [f"'{i}'" if i is not None and isinstance(i, str) else i if i is not None else 'NULL' for i in values]
+        con_cursor = global_connection.cursor()
+
+
+        set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
+
+        query_update = f"UPDATE {table} SET {set_clause} WHERE {columns[0]} = {old_value};" # Assuming primary key is the first column ( not sure about that one)
+        print(query_update)  
+        con_cursor.execute(query_update)
+
+        
+        global_connection.commit()
+
+    except Exception as err:
+        print(err)
 

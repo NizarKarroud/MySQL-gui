@@ -204,14 +204,71 @@ def columns_frame(table):
     tree_y_Scrollbar.config(command=treeview.yview)
     tree_x_Scrollbar.config(command=treeview.xview)
 
-    treeview.bind('<Double-1>', lambda event , headers=columns: clicker(headers , treeview.item(treeview.selection())['values']))
+    treeview.bind('<Double-1>', lambda event , headers=columns: clicker(treeframe ,table , headers , treeview.item(treeview.selection())['values']))
 
-def clicker(headers , selected_row):
+def clicker(frame ,table ,headers , selected_row):
+    alter_window(frame ,table , headers , selected_row)
+
+def alter_window(frame ,table , headers, selected_row):    
     window = tk.Toplevel(app)
-    window.grab_set()
     window.geometry("800x600")
-    print("Headers:", headers)
-    print("Selected Row:", selected_row)
+    window.title("Alter Row")
+    
+    # Create a scrollable frame inside the window
+    scroll_frame = ttk.Frame(window)
+    scroll_frame.pack(fill=tk.BOTH, expand=True)
+
+    # Add a canvas to make the frame scrollable
+    canvas = tk.Canvas(scroll_frame)
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    scrollbar = ttk.Scrollbar(scroll_frame, orient=tk.VERTICAL, command=canvas.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    
+    canvas.configure(yscrollcommand=scrollbar.set)
+
+    inner_frame = ttk.Frame(canvas)
+    canvas.create_window((0, 0), window=inner_frame, anchor=tk.NW)
+
+    # Populate the inner frame with entry widgets
+    entries = []
+    for header, value in zip(headers, selected_row):
+        label = ttk.Label(inner_frame, text=header)
+        label.pack(padx=300, pady=5)
+
+        entry_var = tk.StringVar(value=value)
+        entry = ttk.Entry(inner_frame, textvariable=entry_var)
+        entry.pack(padx=300, pady=5 )
+
+        entries.append(entry_var)
+
+    # Function to update canvas scrolling region
+    def _configure_scroll_region(event):
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+    inner_frame.bind("<Configure>", _configure_scroll_region)
+
+    # Function to get the values from the entry widgets
+    def get_values(table):
+        new_values = [entry.get() for entry in entries]
+        print("New Values:", new_values)
+        window.destroy()
+        frame.destroy()
+        mysql_con.alter_table(selected_row[0],table , new_values , headers)
+        columns_frame(table)
+
+    # Add a button to submit the changes
+    submit_button = ttk.Button(inner_frame, text="Update", command=lambda : get_values(table))
+    submit_button.pack(padx=10, pady=20)
+
+    # Bind the canvas scrolling to mousewheel events
+    def _on_mousewheel(event):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+
+
 
 
 app = tk.Tk()
