@@ -1,4 +1,5 @@
 import mysql.connector
+import pandas
 
 
 global_connection = None
@@ -69,24 +70,37 @@ def show_table_records(table):
         con_cursor.execute(f"SELECT * FROM {table}")
         rows = con_cursor.fetchall()
         columns = [i[0] for i in con_cursor.description]
-        return columns,rows
+        return columns,rows,get_prim_key(con_cursor,table)
     except Exception as err:
         print(err)
         return None
 
-def alter_table(old_value , table, values , columns):
+def get_prim_key(con_cursor,table):
     try :
-        values = [f"'{i}'" if i is not None and isinstance(i, str) else i if i is not None else 'NULL' for i in values]
+        con_cursor.execute(f"SHOW KEYS FROM {table} WHERE Key_name = 'PRIMARY';")
+        rows = con_cursor.fetchall()
+        if len(rows) == 1 :
+            return rows[0][4] 
+        elif len(rows) > 1 :
+            ... #it's a composite key 
+
+    except Exception as err:
+        print(err)
+        return None
+
+
+def alter_table(table, values , columns,primary_key, primary_key_old_value):
+    try :
+        values = [f"'{i}'" if isinstance(i, str) else i if i is not None else 'NULL' for i in values]
         con_cursor = global_connection.cursor()
 
 
         set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
 
-        query_update = f"UPDATE {table} SET {set_clause} WHERE {columns[0]} = {old_value};" # Assuming primary key is the first column ( not sure about that one)
+        query_update = f"UPDATE {table} SET {set_clause} WHERE {primary_key} = {primary_key_old_value};" 
         print(query_update)  
         con_cursor.execute(query_update)
 
-        
         global_connection.commit()
 
     except Exception as err:
