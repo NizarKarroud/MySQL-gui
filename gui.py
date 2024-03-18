@@ -1,6 +1,6 @@
 import customtkinter
 import mysql_con
-from tkinter import ttk
+from tkinter import ttk , messagebox
 import tkinter as tk
 import ttkbootstrap
 
@@ -10,8 +10,11 @@ def login_success(frame , hostname  ,port ,username , password ) :
     if con == True :
         frame.destroy()
         database_menu()
+    else : 
+        messagebox.showerror(title='Error' , message=con )
 
 
+    
 def db_creation_success(db_create_entry):
     cr = mysql_con.create_database(db_create_entry)
     if cr == True :
@@ -81,10 +84,30 @@ def database_menu():
     db_create_entry.pack(pady=(60,0)) 
 
     create_database_button = ttk.Button(menu_frame,text="Create a new Database" ,command=lambda:db_creation_success(new_db.get()))
-    create_database_button.pack(side="top", pady=(5,50))
+    create_database_button.pack(side="top", pady=(10,40))
+
 
     databases = mysql_con.show_databases()
     databases_buttons = [ttk.Button(menu_frame,text=database , command=lambda db=database: tables_frame(db[0])).pack(side="top", pady=10) for database in databases]
+
+def sql_text(db_name):
+
+    sql_frame = ttk.Frame(master=app)
+    sql_frame.grid(row=0, column=1 , sticky="nswe")
+    app.grid_columnconfigure(1, weight=1) 
+    app.grid_rowconfigure(0, weight=1)
+
+    text_box = tk.Text(sql_frame)
+    text_box.pack(padx=20 , pady= (20,10) ,fill='both' , expand=True)
+
+    exec_button = ttk.Button(sql_frame, text='Execute' , command= lambda : sql_query(db_name,text_box.get(1.0, "end-1c")))
+    exec_button.pack(pady=(10,30),padx=20 , side='right')
+
+
+def sql_query(db_name,query):
+    print(query)
+    print(db_name)
+    # work on the query in th mysql_con file
 
 
 def tables_frame(db_name):
@@ -93,34 +116,29 @@ def tables_frame(db_name):
     app.grid_columnconfigure(1, weight=1) 
     app.grid_rowconfigure(0, weight=1)
 
+    create_table_button =ttk.Button(table_frame , text="Create new Table" , command=lambda:table_create_page(table_frame))
+    create_table_button.pack(anchor="ne" ,padx=10 , pady=15)
 
-    drop_button_frame = ttk.Frame(master=table_frame)
-    drop_button_frame.pack(anchor="ne", padx=10, pady=10)
+    drop_db_button = ttk.Button(table_frame , text="Drop database" , command=lambda: drop_db(table_frame,db_name))
+    drop_db_button.pack(anchor="ne" ,padx=10 , pady=15)
 
-    create_table_frame = ttk.Frame(master=table_frame)
-    create_table_frame.pack(anchor="ne" ,padx=10 , pady=15)
-
-    create_table_button =ttk.Button(create_table_frame , text="Create new Table" , command=lambda:table_create_page((table_frame , drop_button_frame , create_table_frame)))
-    create_table_button.pack()
-
-    drop_db_button = ttk.Button(drop_button_frame , text="Drop database" , command=lambda: drop_db(table_frame,db_name))
-    drop_db_button.pack()
+    sql_button = ttk.Button(table_frame, text='SQL Query' , command= lambda : sql_text(db_name)) 
+    sql_button.pack(anchor="ne" ,padx=10 , pady=15)
 
     tables = show_db_tables(db_name)
 
     tables_buttons = [ttk.Button(table_frame,text=table, command=lambda table=table[0] : show_columns(table_frame,table)).pack(side="top", pady=10) for table in tables]
 
-def table_create_page(frames):
-    for frame in frames :
-        frame.destroy()
+def table_create_page(table_frame):
+    table_frame.destroy()
 
-    table_name_frame = customtkinter.CTkFrame(app)
+    table_name_frame = ttk.Frame(app)
     table_name_frame.grid(column= 1  , row=0 , sticky = "nswe")
 
     app.grid_rowconfigure(0, weight=1) 
     app.grid_columnconfigure(1, weight=1) 
 
-    create_column_frame = customtkinter.CTkFrame(table_name_frame)
+    create_column_frame = ttk.Frame(table_name_frame)
     create_column_frame.grid(column= 0  , row=0 , sticky = "ew" , columnspan=2)
     table_name_frame.grid_columnconfigure(0, weight=1)  
 
@@ -273,6 +291,7 @@ def alter_window(frame ,table , headers, selected_row):
 
 app = tk.Tk()
 app.geometry("1024x768")
+
 style = ttkbootstrap.Style(theme="darkly")
 style.theme_use()
 

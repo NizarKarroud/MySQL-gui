@@ -18,13 +18,11 @@ def handle_login(hostname,username , passw , port=3306,db=None):
             globals()["passowrd"]= passw
             globals()["port" ]= port
             globals()["db"] = db   
-            print("succesful connection")
             return True
         else :
             return False
     except mysql.connector.Error as err:
-        print(err)
-        return False
+        return err
 
 
 def show_databases():
@@ -94,3 +92,4 @@ def alter_table(old_value , table, values , columns):
     except Exception as err:
         print(err)
 
+# think about migration (sqlalchemy )
