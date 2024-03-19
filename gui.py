@@ -1,34 +1,42 @@
-import customtkinter
+from customtkinter import CTkScrollableFrame
 import mysql_con
 from tkinter import ttk , messagebox
 import tkinter as tk
 import ttkbootstrap
 
 def login_success(frame , hostname  ,port ,username , password ) :
-    con = mysql_con.handle_login(hostname= 'localhost',username='root',passw= 'root' , port="3306") 
+    connection = mysql_con.handle_login(hostname= 'localhost',username='root',passw= 'root' , port="3306") 
         # hostname= hostname ,username= username ,passw= password , port=port 
-    if con == True :
+    if connection == True :
         frame.destroy()
         database_menu()
     else : 
-        messagebox.showerror(title='Error' , message=con )
+        messagebox.showerror(title='Error' , message=connection )
 
    
-def db_creation_success(db_create_entry):
-    cr = mysql_con.create_database(db_create_entry)
-    if cr == True :
+def db_create(db_create_entry):
+    db_creation = mysql_con.create_database(db_create_entry)
+    if db_creation == True :
         database_menu()
+    else :
+        messagebox.showerror(title='Error' , message=db_creation )
+
 
 def show_db_tables(db_name):
-    con = mysql_con.handle_login(hostname= mysql_con.hostname ,username= mysql_con.username,passw=mysql_con.passowrd , port=mysql_con.port , db=db_name) 
-    if con == True :
+    connection = mysql_con.handle_login(hostname= mysql_con.hostname ,username= mysql_con.username,passw=mysql_con.passowrd , port=mysql_con.port , db=db_name) 
+    if connection == True :
         return mysql_con.show_tables(db_name)
+    else : 
+        messagebox.showerror(title='Error' , message=connection )
 
 def drop_db(frame,db_name):
     dropped = mysql_con.drop_db(db_name)
     if dropped ==True :
         frame.destroy()
         database_menu()
+    else : 
+        messagebox.showerror(title='Error' , message=dropped )
+
 
 def show_columns(table_frame,table):
     table_frame.destroy()
@@ -87,7 +95,7 @@ def create_login_page():
 
 """ The Database Menu and Create new Database functionality """
 def database_menu():
-    menu_frame = customtkinter.CTkScrollableFrame(master=app)
+    menu_frame = CTkScrollableFrame(master=app)
     menu_frame.grid(row=0, column=0 , sticky="ns")
     app.grid_rowconfigure(0, weight=1) 
 
@@ -95,7 +103,7 @@ def database_menu():
     db_create_entry = ttk.Entry(menu_frame, textvariable=new_db )
     db_create_entry.pack(pady=(60,0)) 
 
-    create_database_button = ttk.Button(menu_frame,text="Create a new Database" ,command=lambda:db_creation_success(new_db.get()))
+    create_database_button = ttk.Button(menu_frame,text="Create a new Database" ,command=lambda:db_create(new_db.get()))
     create_database_button.pack(side="top", pady=(10,40))
 
     databases = mysql_con.show_databases()
@@ -104,12 +112,12 @@ def database_menu():
 """ Frame that contains the database Operations and Tables """
 def tables_frame(db_name):
     #main frame
-    table_frame = customtkinter.CTkScrollableFrame(master=app)
+    table_frame = CTkScrollableFrame(master=app)
     table_frame.grid(row=0, column=1 , sticky="nswe")
     app.grid_columnconfigure(1, weight=1) 
     app.grid_rowconfigure(0, weight=1)
 
-    #button to get to the table creation page
+    # button to get to the table creation page
     create_table_button =ttk.Button(table_frame , text="Create new Table" , command=lambda:table_create_page(table_frame))
     create_table_button.pack(anchor="ne" ,padx=10 , pady=15)
 

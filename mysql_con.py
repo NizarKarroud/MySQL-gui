@@ -42,8 +42,7 @@ def create_database(my_db):
         con_cursor.execute(f"CREATE DATABASE {my_db}")
         return True
     except Exception as err :
-        print(err)
-        return False
+        return err
     
 def show_tables(db_name):
     try :
@@ -53,7 +52,7 @@ def show_tables(db_name):
         con_cursor.reset()
         return tables
     except Exception as err:
-        print(err)
+        return err
 
 def drop_db(db_name):
     try :
@@ -61,8 +60,7 @@ def drop_db(db_name):
         con_cursor.execute(f"DROP DATABASE {db_name}")
         return True
     except Exception as err:
-        print(err)
-
+        return err
 
 def show_table_records(table):
     try :
