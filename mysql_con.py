@@ -70,36 +70,39 @@ def show_table_records(table):
         con_cursor.execute(f"SELECT * FROM {table}")
         rows = con_cursor.fetchall()
         columns = [i[0] for i in con_cursor.description]
-        return columns,rows,get_prim_key(con_cursor,table)
+        return columns,rows,get_prim_keys(con_cursor,table)
     except Exception as err:
         print(err)
         return None
 
-def get_prim_key(con_cursor,table):
+def get_prim_keys(con_cursor,table):
     try :
         con_cursor.execute(f"SHOW KEYS FROM {table} WHERE Key_name = 'PRIMARY';")
         rows = con_cursor.fetchall()
-        if len(rows) == 1 :
-            return rows[0][4] 
-        elif len(rows) > 1 :
-            ... #it's a composite key 
+        
+        return [row[4] for i,row in enumerate(rows)]
 
     except Exception as err:
         print(err)
         return None
 
 
-def alter_table(table, values , columns,primary_key, primary_key_old_value):
+def alter_table(table, values , columns,key_val_couple):
     try :
         values = [f"'{i}'" if isinstance(i, str) else i if i is not None else 'NULL' for i in values]
         con_cursor = global_connection.cursor()
 
+        con_cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
 
         set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
 
-        query_update = f"UPDATE {table} SET {set_clause} WHERE {primary_key} = {primary_key_old_value};" 
+        where_clause = ' AND '.join([f"{key} = '{value}'" for key,value in key_val_couple])
+
+        query_update = f"UPDATE {table} SET {set_clause} WHERE {where_clause};" 
         print(query_update)  
         con_cursor.execute(query_update)
+        
+        con_cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
 
         global_connection.commit()
 

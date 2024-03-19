@@ -34,13 +34,19 @@ def show_columns(table_frame,table):
     table_frame.destroy()
     record_frame(table)
 
-def click_on_row(frame,primary_key,table ,headers , selected_row):
+def click_on_row(frame,primary_keys,table ,headers , selected_row):
     row_data = list(zip(headers,selected_row))
+    print(primary_keys)
+    print(row_data)
+
+    keys_values_couples = []
     for couple in row_data :
-        if couple[0] == primary_key :
-            primary_key_old_value = f"'{couple[1]}'"
-            
-    update_row_window(frame ,table , headers , selected_row ,primary_key, primary_key_old_value)
+        for key in primary_keys :
+            if couple[0] == key :
+                keys_values_couples.append(couple)
+
+    print(keys_values_couples)
+    update_row_window(frame ,table , headers , selected_row ,keys_values_couples)
 
 def create_login_page(): 
     frame = ttk.Frame(master=app)
@@ -250,7 +256,7 @@ def record_frame(table):
 
 """ UPDATE row values """
 
-def update_row_window(frame ,table , columns, selected_row  ,primary_key, primary_key_old_value):    
+def update_row_window(frame ,table , columns, selected_row , key_val_cpl):    
     window = tk.Toplevel(app)
     window.geometry("800x600")
     window.title("Alter Row")
@@ -302,11 +308,11 @@ def update_row_window(frame ,table , columns, selected_row  ,primary_key, primar
     # Function to get the values from the entry widgets
     def get_values(table):
         new_values = [entry.get() for entry in entries]
-        print("New Values:", new_values , primary_key , primary_key_old_value)
+        print("New Values:", new_values )
         window.destroy()
         frame.destroy()
       
-        mysql_con.alter_table(table , new_values , columns , primary_key, primary_key_old_value)
+        mysql_con.alter_table(table , new_values , columns ,key_val_cpl)
         record_frame(table)
 
 app = tk.Tk()
