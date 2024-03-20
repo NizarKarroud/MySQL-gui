@@ -87,7 +87,9 @@ def get_prim_keys(con_cursor,table):
 
 def alter_table(table, values , columns,key_val_couple):
     try :
-        values = [f"'{i}'" if isinstance(i, str) else i if i is not None else 'NULL' for i in values]
+
+        values = [f"'{i}'" if  i is not None else 'NULL' for i in values]
+
         con_cursor = global_connection.cursor()
 
         con_cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
@@ -108,3 +110,13 @@ def alter_table(table, values , columns,key_val_couple):
         print(err)
 
 # think about migration (sqlalchemy )
+        
+
+def exec_query(query) : 
+    try :
+        con_cursor = global_connection.cursor()
+        con_cursor.execute(query)
+    # handle diff type of queries ( SELECT IS THE ONLY ONE THAT RETURNS )
+    except Exception as err:
+        return err
+

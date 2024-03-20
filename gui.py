@@ -4,11 +4,14 @@ from tkinter import ttk , messagebox
 import tkinter as tk
 import ttkbootstrap
 
+frame_to_destroy = []
+
 def login_success(frame , hostname  ,port ,username , password ) :
     connection = mysql_con.handle_login(hostname= 'localhost',username='root',passw= 'root' , port="3306") 
         # hostname= hostname ,username= username ,passw= password , port=port 
     if connection == True :
         frame.destroy()
+        app.unbind("<Return>")
         database_menu()
     else : 
         messagebox.showerror(title='Error' , message=connection )
@@ -38,9 +41,13 @@ def drop_db(frame,db_name):
         messagebox.showerror(title='Error' , message=dropped )
 
 
-def show_columns(table_frame,table):
-    table_frame.destroy()
+def show_records(notebook ,table):
+    notebook.destroy()
     record_frame(table)
+  
+def sql_query(query):
+    mysql_con.exec_query(query)
+    # work on the query in th mysql_con file
 
 def click_on_row(frame,primary_keys,table ,headers , selected_row):
     row_data = list(zip(headers,selected_row))
@@ -93,6 +100,12 @@ def create_login_page():
     login_button = ttk.Button(master=frame, text="Login", command=lambda: login_success(frame, hostname.get(), port.get(), username.get(), password.get()))
     login_button.pack(pady=10)
 
+    def on_enter(event):
+        login_success(frame, hostname.get(), port.get(), username.get(), password.get())
+
+    app.bind("<Return>", on_enter)
+    
+
 """ The Database Menu and Create new Database functionality """
 def database_menu():
     menu_frame = CTkScrollableFrame(master=app)
@@ -111,47 +124,75 @@ def database_menu():
 
 """ Frame that contains the database Operations and Tables """
 def tables_frame(db_name):
-    #main frame
-    table_frame = CTkScrollableFrame(master=app)
-    table_frame.grid(row=0, column=1 , sticky="nswe")
+    for frame in frame_to_destroy :
+        frame.destroy()
+
+    #Creating tabs
+    notebook = ttk.Notebook(app)
+    notebook.grid(row=0, column=1 , sticky="nswe" , padx=10 , pady=10)
     app.grid_columnconfigure(1, weight=1) 
     app.grid_rowconfigure(0, weight=1)
 
-    # button to get to the table creation page
-    create_table_button =ttk.Button(table_frame , text="Create new Table" , command=lambda:table_create_page(table_frame))
-    create_table_button.pack(anchor="ne" ,padx=10 , pady=15)
+    table_frame = tk.Canvas(master=notebook)
+    table_frame.pack(fill="both" , expand=True)
 
-    # Button to drop the database
-    drop_db_button = ttk.Button(table_frame , text="Drop database" , command=lambda: drop_db(table_frame,db_name))
-    drop_db_button.pack(anchor="ne" ,padx=10 , pady=15)
-
-    # Button to get to the SQL query Page
-    sql_button = ttk.Button(table_frame, text='SQL Query' , command= lambda : sql_text_box(db_name)) 
-    sql_button.pack(anchor="ne" ,padx=10 , pady=15)
+    inner_frame = tk.Frame(table_frame)
+    table_frame.create_window((0, 0), window=inner_frame, anchor="nw")
 
     tables = show_db_tables(db_name)
-    tables_buttons = [ttk.Button(table_frame,text=table, command=lambda table=table[0] : show_columns(table_frame,table)).pack(side="top", pady=10) for table in tables]
+    tables_buttons = [ttk.Button(inner_frame,text=table, command=lambda table=table[0] : show_records(notebook,table)).pack(padx=250 ,pady=10) for table in tables]
+    
+    # Add Vertical scrollbar
+    y_Scrollbar = ttk.Scrollbar(table_frame , orient="vertical")
+    y_Scrollbar.pack(side="right",fill="y")
 
-def sql_text_box(db_name):
 
-    #frame for the text
-    sql_frame = ttk.Frame(master=app)
-    sql_frame.grid(row=0, column=1 , sticky="nswe")
-    app.grid_columnconfigure(1, weight=1) 
-    app.grid_rowconfigure(0, weight=1)
+    table_frame.config(yscrollcommand=y_Scrollbar.set)
+    y_Scrollbar.config(command=table_frame.yview)
 
-    # Text (SQL CODE)
+    inner_frame.update_idletasks()
+    table_frame.config(scrollregion=table_frame.bbox("all"))
+
+    # Bind the canvas scrolling to mousewheel events
+    def _on_mousewheel(event):
+        table_frame.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    table_frame.bind_all("<MouseWheel>", _on_mousewheel)
+
+    notebook.add(table_frame , text='Tables')
+
+    sql_frame = ttk.Frame(notebook)
+    sql_frame.pack(fill="both" , expand=True)
+
     text_box = tk.Text(sql_frame)
     text_box.pack(padx=20 , pady= (20,10) ,fill='both' , expand=True)
 
-    #button to execute the query
-    exec_button = ttk.Button(sql_frame, text='Execute' , command= lambda : sql_query(db_name,text_box.get(1.0, "end-1c")))
+    exec_button = ttk.Button(sql_frame, text='Execute' , command= lambda : sql_query(text_box.get(1.0, "end-1c")))
     exec_button.pack(pady=(10,30),padx=20 , side='right')
 
-def sql_query(db_name,query):
-    print(query)
-    print(db_name)
-    # work on the query in th mysql_con file
+    notebook.add(sql_frame , text='SQL')
+
+    export_frame = ttk.Frame(notebook)
+    export_frame.pack(fill="both" , expand=True)
+
+    text_box = tk.Text(export_frame)
+    text_box.pack(padx=20 , pady= (20,10) ,fill='both' , expand=True)
+
+    exec_button = ttk.Button(export_frame, text='Execute' , command= lambda : sql_query(text_box.get(1.0, "end-1c")))
+    exec_button.pack(pady=(10,30),padx=20 , side='right')
+    # notebook.add(table_frame , text='Search')
+    # notebook.add(table_frame , text='Operations')
+    # notebook.add(table_frame , text='Triggers')
+
+
+    # # button to get to the table creation page
+    # create_table_button =ttk.Button(table_frame , text="Create new Table" , command=lambda:table_create_page(table_frame))
+    # create_table_button.pack(anchor="ne" ,padx=10 , pady=15)
+
+    # # Button to drop the database
+    # drop_db_button = ttk.Button(table_frame , text="Drop database" , command=lambda: drop_db(table_frame,db_name))
+    # drop_db_button.pack(anchor="ne" ,padx=10 , pady=15)
+
 
 """ TABLE CREATION PAGE """
 def table_create_page(table_frame):
@@ -261,6 +302,7 @@ def record_frame(table):
 
     treeview.bind('<Double-1>', lambda event , headers=columns: click_on_row(treeframe,primary_key ,table , headers , treeview.item(treeview.selection())['values']))
 
+    frame_to_destroy.append(treeframe)
 
 """ UPDATE row values """
 
@@ -316,7 +358,6 @@ def update_row_window(frame ,table , columns, selected_row , key_val_cpl):
     # Function to get the values from the entry widgets
     def get_values(table):
         new_values = [entry.get() for entry in entries]
-        print("New Values:", new_values )
         window.destroy()
         frame.destroy()
       
