@@ -85,7 +85,6 @@ def get_prim_keys(con_cursor,table):
         return None
 
 
-
 def alter_table(db_name , table, values , columns,key_val_couple):
     try :
 
@@ -94,37 +93,63 @@ def alter_table(db_name , table, values , columns,key_val_couple):
 
         con_cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
         
-        # to get where the primary key of a table is a foreign key ( the table name , and column name)
+        # to get where the primary key of a table is a foreign key ( the table name , and column name) so that i can implement some sort of UPDATE ON CASCADE
         ref_clause = ", ".join([f"'{column[0]}'" for column in key_val_couple])
         con_cursor.execute(f"SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ({ref_clause});")
         foreign_relations = con_cursor.fetchall()
 
         # to get the foreign keys in a table (the one to whom the record belongs) 
-        # SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = 'etudiant' AND TABLE_NAME = 'etu'; 
-        
-        # to get the the table and the column
-        con_cursor.execute(f"SELECT REFERENCED_TABLE_NAME , REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ({ref_clause});")
-        primary_relations = con_cursor.fetchall()
+        con_cursor.execute(f"SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND TABLE_NAME = '{table}';") 
+        foreign_keys_list = con_cursor.fetchall()
+
+        tables_to_check = {}
+        # to get the the tables and the columns where the foreign keys are primary
+        for foreign_key in foreign_keys_list :
+            con_cursor.execute(f"SELECT REFERENCED_TABLE_NAME , REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ('{foreign_key[0]}');")
+            tab_col_couple = con_cursor.fetchall()
+            tables_to_check[tab_col_couple[0][0]] = tab_col_couple[0][1]
 
         
+        if tables_to_check :
+        #check if the updated value of the the foreign keys exist in the records of their tables
+            for foreign_table , column in tables_to_check.items():
+                value = dict(zip(columns, values))[column]
+                con_cursor.execute(f"SELECT COUNT(*) FROM {foreign_table} WHERE {column} = {value};")
+                result = con_cursor.fetchall()[0]
+                print(result)
+                if result[0] > 0  :
+                    set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
 
+                    where_clause = ' AND '.join([f"{key} = '{value}'" for key,value in key_val_couple])
 
-        set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
+                    query_update = f"UPDATE {table} SET {set_clause} WHERE {where_clause};"
+                    print(query_update) 
+                    con_cursor.execute(query_update)
 
-        where_clause = ' AND '.join([f"{key} = '{value}'" for key,value in key_val_couple])
+                    ref_set_clause = ','.join(set_clause.split(',')[:len(key_val_couple)]) 
+                    for relation in foreign_relations :
+                        con_cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
 
-        query_update = f"UPDATE {table} SET {set_clause} WHERE {where_clause};" 
-        con_cursor.execute(query_update)
-        print(query_update)
+                    con_cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
 
-        ref_set_clause = ','.join(set_clause.split(',')[:len(key_val_couple)]) 
-        for relation in foreign_relations :
-            con_cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
+                    global_connection.commit()
+        else : 
+            set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
 
-        con_cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+            where_clause = ' AND '.join([f"{key} = '{value}'" for key,value in key_val_couple])
 
-        global_connection.commit()
+            query_update = f"UPDATE {table} SET {set_clause} WHERE {where_clause};"
+            print(query_update) 
+            con_cursor.execute(query_update)
 
+            ref_set_clause = ','.join(set_clause.split(',')[:len(key_val_couple)]) 
+            for relation in foreign_relations :
+                print(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
+                con_cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
+
+            con_cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+
+            global_connection.commit()     
     except Exception as err:
         print(err)
 
