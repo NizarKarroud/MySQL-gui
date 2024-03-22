@@ -169,20 +169,40 @@ def tables_frame(db_name):
 
     exec_button = ttk.Button(sql_frame, text='Execute' , command= lambda : sql_query(text_box.get(1.0, "end-1c")))
     exec_button.pack(pady=(10,30),padx=20 , side='right')
-
     notebook.add(sql_frame , text='SQL')
+
+    operations_frame = ttk.Frame(notebook)
+    operations_frame.pack(fill="both" , expand=True)
+    notebook.add(operations_frame , text='Operations')
+
+    copy_frame = ttk.Frame(notebook)
+    copy_frame.pack(fill="both" , expand=True)
+    notebook.add(copy_frame , text='Search')
+
+    migrate_frame = ttk.Frame(notebook)
+    migrate_frame.pack(fill="both" , expand=True)
+    notebook.add(migrate_frame , text='Copy Database')
+
+
+    priv_frame = ttk.Frame(notebook)
+    priv_frame.pack(fill="both" , expand=True)
+    notebook.add(priv_frame , text='User Privileges')
 
     export_frame = ttk.Frame(notebook)
     export_frame.pack(fill="both" , expand=True)
+    notebook.add(export_frame , text='Export')
 
-    text_box = tk.Text(export_frame)
-    text_box.pack(padx=20 , pady= (20,10) ,fill='both' , expand=True)
+    migrate_frame = ttk.Frame(notebook)
+    migrate_frame.pack(fill="both" , expand=True)
+    notebook.add(migrate_frame , text='Database migration')
+    
+    # text_box = tk.Text(export_frame)
+    # text_box.pack(padx=20 , pady= (20,10) ,fill='both' , expand=True)
 
-    exec_button = ttk.Button(export_frame, text='Execute' , command= lambda : sql_query(text_box.get(1.0, "end-1c")))
-    exec_button.pack(pady=(10,30),padx=20 , side='right')
-    # notebook.add(table_frame , text='Search')
-    # notebook.add(table_frame , text='Operations')
-    # notebook.add(table_frame , text='Triggers')
+    # exec_button = ttk.Button(export_frame, text='Execute' , command= lambda : ...))
+    # exec_button.pack(pady=(10,30),padx=20 , side='right')
+
+
 
 
     # # button to get to the table creation page

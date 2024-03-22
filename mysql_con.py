@@ -1,6 +1,6 @@
 import mysql.connector
 import pandas
-
+import os
 
 global_connection = None
 hostname = None
@@ -120,3 +120,18 @@ def exec_query(query) :
     except Exception as err:
         return err
 
+
+def export_database(db_name , path):
+    if os.path.exists(path):
+        new_folder_path = os.path.join(path, db_name)
+        # Check if the folder already exists within the parent path
+        if not os.path.exists(new_folder_path):
+            try:
+                # Create the folder within the parent path
+                os.makedirs(new_folder_path)
+            except OSError as e:
+                return f"Error creating folder at {new_folder_path}: {e}"
+    else:
+        return f"Parent path '{path}' does not exist."
+    
+    #
