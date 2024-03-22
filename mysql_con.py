@@ -85,23 +85,42 @@ def get_prim_keys(con_cursor,table):
         return None
 
 
-def alter_table(table, values , columns,key_val_couple):
+
+def alter_table(db_name , table, values , columns,key_val_couple):
     try :
 
         values = [f"'{i}'" if  i is not None else 'NULL' for i in values]
-
         con_cursor = global_connection.cursor()
 
         con_cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+        
+        # to get where the primary key of a table is a foreign key ( the table name , and column name)
+        ref_clause = ", ".join([f"'{column[0]}'" for column in key_val_couple])
+        con_cursor.execute(f"SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ({ref_clause});")
+        foreign_relations = con_cursor.fetchall()
+
+        # to get the foreign keys in a table (the one to whom the record belongs) 
+        # SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = 'etudiant' AND TABLE_NAME = 'etu'; 
+        
+        # to get the the table and the column
+        con_cursor.execute(f"SELECT REFERENCED_TABLE_NAME , REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ({ref_clause});")
+        primary_relations = con_cursor.fetchall()
+
+        
+
 
         set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
 
         where_clause = ' AND '.join([f"{key} = '{value}'" for key,value in key_val_couple])
 
         query_update = f"UPDATE {table} SET {set_clause} WHERE {where_clause};" 
-        print(query_update)  
         con_cursor.execute(query_update)
-        
+        print(query_update)
+
+        ref_set_clause = ','.join(set_clause.split(',')[:len(key_val_couple)]) 
+        for relation in foreign_relations :
+            con_cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
+
         con_cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
 
         global_connection.commit()

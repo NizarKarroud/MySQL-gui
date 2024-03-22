@@ -6,6 +6,7 @@ import ttkbootstrap
 
 frame_to_destroy = []
 
+""" The Login Logic"""
 def login_success(frame , hostname  ,port ,username , password ) :
     connection = mysql_con.handle_login(hostname= 'localhost',username='root',passw= 'root' , port="3306") 
         # hostname= hostname ,username= username ,passw= password , port=port 
@@ -16,7 +17,7 @@ def login_success(frame , hostname  ,port ,username , password ) :
     else : 
         messagebox.showerror(title='Error' , message=connection )
 
-   
+"""To create a Database"""
 def db_create(db_create_entry):
     db_creation = mysql_con.create_database(db_create_entry)
     if db_creation == True :
@@ -24,7 +25,7 @@ def db_create(db_create_entry):
     else :
         messagebox.showerror(title='Error' , message=db_creation )
 
-
+"""Returns the Tables in a specific Database """
 def show_db_tables(db_name):
     connection = mysql_con.handle_login(hostname= mysql_con.hostname ,username= mysql_con.username,passw=mysql_con.passowrd , port=mysql_con.port , db=db_name) 
     if connection == True :
@@ -32,6 +33,7 @@ def show_db_tables(db_name):
     else : 
         messagebox.showerror(title='Error' , message=connection )
 
+""" Function to Drop database"""
 def drop_db(frame,db_name):
     dropped = mysql_con.drop_db(db_name)
     if dropped ==True :
@@ -40,19 +42,20 @@ def drop_db(frame,db_name):
     else : 
         messagebox.showerror(title='Error' , message=dropped )
 
-
-def show_records(notebook ,table):
+"""Transition from database to specific table"""
+def db_to_tb(db_name , notebook ,table):
     notebook.destroy()
-    table_tabs(table)
-  
+    table_tabs(db_name , table)
+
+""" For the Sql Query Tab"""
 def sql_query(query):
     mysql_con.exec_query(query)
     # work on the query in th mysql_con file
 
-def click_on_row(frame,primary_keys,table ,headers , selected_row):
+""" What happens when you click on a row (Record) """
+def click_on_row(db_name , frame,primary_keys,table ,headers , selected_row):
     row_data = list(zip(headers,selected_row))
-    print(primary_keys)
-    print(row_data)
+
 
     keys_values_couples = []
     for couple in row_data :
@@ -60,9 +63,9 @@ def click_on_row(frame,primary_keys,table ,headers , selected_row):
             if couple[0] == key :
                 keys_values_couples.append(couple)
 
-    print(keys_values_couples)
-    update_row_window(frame ,table , headers , selected_row ,keys_values_couples)
+    update_row_window(db_name , frame ,table , headers , selected_row ,keys_values_couples)
 
+""" The Login Page """
 def create_login_page(): 
     frame = ttk.Frame(master=app)
     frame.pack(pady=20 , padx=60 , fill="both" , expand=True)
@@ -105,7 +108,6 @@ def create_login_page():
 
     app.bind("<Return>", on_enter)
     
-
 """ The Database Menu and Create new Database functionality """
 def database_menu():
     menu_frame = CTkScrollableFrame(master=app)
@@ -120,7 +122,7 @@ def database_menu():
     create_database_button.pack(side="top", pady=(10,40))
 
     databases = mysql_con.show_databases()
-    databases_buttons = [ttk.Button(menu_frame,text=database , command=lambda db=database: tables_frame(db[0])).pack(side="top", pady=10) for database in databases]
+    databases_buttons = [ttk.Button(menu_frame,text=database , command=lambda db=database: tables_frame(db[0])).pack(fill='both',side="top", pady=10) for database in databases]
 
 """ Frame that contains the tabs for database Operations and Tables """
 def tables_frame(db_name):
@@ -136,29 +138,28 @@ def tables_frame(db_name):
     table_frame = tk.Canvas(master=notebook)
     table_frame.pack(fill="both" , expand=True)
 
-    inner_frame = tk.Frame(table_frame)
-    table_frame.create_window((0, 0), window=inner_frame, anchor="nw")
-
-    tables = show_db_tables(db_name)
-    tables_buttons = [ttk.Button(inner_frame,text=table, command=lambda table=table[0] : show_records(notebook,table)).pack(padx=250 ,pady=10) for table in tables]
-    
-    # Add Vertical scrollbar
     y_Scrollbar = ttk.Scrollbar(table_frame , orient="vertical")
     y_Scrollbar.pack(side="right",fill="y")
-
 
     table_frame.config(yscrollcommand=y_Scrollbar.set)
     y_Scrollbar.config(command=table_frame.yview)
 
+    inner_frame = tk.Frame(table_frame , highlightbackground="black", highlightthickness=2  )
+    table_frame.create_window((0, 0) , window=inner_frame, anchor='nw')
+    # inner_frame.pack(expand=True , fill="both")
+
+    tables = show_db_tables(db_name)
+    tables_buttons = [ttk.Button(inner_frame,text=table, command=lambda table=table[0] : db_to_tb(db_name ,notebook,table)).pack(side='top',anchor='center',fill='x',pady=10 ) for table in tables]
+
     inner_frame.update_idletasks()
     table_frame.config(scrollregion=table_frame.bbox("all"))
+
 
     # Bind the canvas scrolling to mousewheel events
     def _on_mousewheel(event):
         table_frame.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     table_frame.bind_all("<MouseWheel>", _on_mousewheel)
-
     notebook.add(table_frame , text='Tables')
 
     sql_frame = ttk.Frame(notebook)
@@ -212,7 +213,6 @@ def tables_frame(db_name):
     # # Button to drop the database
     # drop_db_button = ttk.Button(table_frame , text="Drop database" , command=lambda: drop_db(table_frame,db_name))
     # drop_db_button.pack(anchor="ne" ,padx=10 , pady=15)
-
 
 """ TABLE CREATION PAGE """
 def table_create_page(table_frame):
@@ -287,7 +287,7 @@ def table_create_page(table_frame):
         treeview.insert("" , tk.END , values=...)
 
 """ TABLE Tabs """
-def table_tabs(table):
+def table_tabs(db_name , table):
     notebook = ttk.Notebook(app)
     notebook.grid(row=0, column=1 , sticky="nswe" , padx=10 , pady=10)
     app.grid_columnconfigure(1, weight=1) 
@@ -298,12 +298,6 @@ def table_tabs(table):
     notebook.grid_rowconfigure(0, weight=1) 
     notebook.grid_columnconfigure(0, weight=1) 
 
-    record_frame(table,treeframe)
-    
-    notebook.add(child=treeframe ,text='Records')
-
-""" Table's Records """
-def record_frame(table,treeframe):
     columns , rows , primary_key = mysql_con.show_table_records(table)
 
     # Add vertical scrollbar
@@ -332,13 +326,16 @@ def record_frame(table,treeframe):
     tree_x_Scrollbar.config(command=treeview.xview)
 
 
-    treeview.bind('<Double-1>', lambda event , headers=columns: click_on_row(treeframe,primary_key ,table , headers , treeview.item(treeview.selection())['values']))
+    treeview.bind('<Double-1>', lambda event , headers=columns: click_on_row(db_name , treeframe,primary_key ,table , headers , treeview.item(treeview.selection())['values']))
 
-    frame_to_destroy.append(treeframe)
+    frame_to_destroy.append(treeframe) 
+
+    notebook.add(child=treeframe ,text='Records')
+
 
 """ UPDATE row values """
 
-def update_row_window(frame ,table , columns, selected_row , key_val_cpl):    
+def update_row_window(db_name , frame ,table , columns, selected_row , key_val_cpl):    
     window = tk.Toplevel(app)
     window.geometry("800x600")
     window.title("Alter Row")
@@ -378,7 +375,7 @@ def update_row_window(frame ,table , columns, selected_row , key_val_cpl):
     inner_frame.bind("<Configure>", _configure_scroll_region)
 
     # Add a button to submit the changes
-    submit_button = ttk.Button(inner_frame, text="Update", command=lambda : get_values(table))
+    submit_button = ttk.Button(inner_frame, text="Update", command=lambda : get_values(db_name , table))
     submit_button.pack(padx=10, pady=20)
 
     # Bind the canvas scrolling to mousewheel events
@@ -388,13 +385,13 @@ def update_row_window(frame ,table , columns, selected_row , key_val_cpl):
     canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
     # Function to get the values from the entry widgets
-    def get_values(table):
+    def get_values(db_name  ,table):
         new_values = [entry.get() for entry in entries]
         window.destroy()
         frame.destroy()
       
-        mysql_con.alter_table(table , new_values , columns ,key_val_cpl)
-        record_frame(table)
+        mysql_con.alter_table(db_name,table , new_values , columns ,key_val_cpl)
+        table_tabs(db_name , table)
 
 app = tk.Tk()
 app.geometry("1024x768")
