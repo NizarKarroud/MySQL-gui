@@ -43,7 +43,7 @@ def drop_db(frame,db_name):
 
 def show_records(notebook ,table):
     notebook.destroy()
-    record_frame(table)
+    table_tabs(table)
   
 def sql_query(query):
     mysql_con.exec_query(query)
@@ -122,7 +122,7 @@ def database_menu():
     databases = mysql_con.show_databases()
     databases_buttons = [ttk.Button(menu_frame,text=database , command=lambda db=database: tables_frame(db[0])).pack(side="top", pady=10) for database in databases]
 
-""" Frame that contains the database Operations and Tables """
+""" Frame that contains the tabs for database Operations and Tables """
 def tables_frame(db_name):
     for frame in frame_to_destroy :
         frame.destroy()
@@ -216,6 +216,7 @@ def tables_frame(db_name):
 
 """ TABLE CREATION PAGE """
 def table_create_page(table_frame):
+
     table_frame.destroy()
 
     # main frame
@@ -285,14 +286,25 @@ def table_create_page(table_frame):
         treeview.config(height=int(treeview.cget("height"))+1)
         treeview.insert("" , tk.END , values=...)
 
-""" Table's Records """
-
-def record_frame(table):
-    columns , rows , primary_key = mysql_con.show_table_records(table)
-    treeframe = ttk.Frame(app)
-    treeframe.grid(column= 1  , row=0 , sticky = "nswe")
-    app.grid_rowconfigure(0, weight=1) 
+""" TABLE Tabs """
+def table_tabs(table):
+    notebook = ttk.Notebook(app)
+    notebook.grid(row=0, column=1 , sticky="nswe" , padx=10 , pady=10)
     app.grid_columnconfigure(1, weight=1) 
+    app.grid_rowconfigure(0, weight=1)   
+    
+    treeframe = ttk.Frame(notebook)
+    treeframe.grid(column= 0  , row=0 , sticky = "nswe")
+    notebook.grid_rowconfigure(0, weight=1) 
+    notebook.grid_columnconfigure(0, weight=1) 
+
+    record_frame(table,treeframe)
+    
+    notebook.add(child=treeframe ,text='Records')
+
+""" Table's Records """
+def record_frame(table,treeframe):
+    columns , rows , primary_key = mysql_con.show_table_records(table)
 
     # Add vertical scrollbar
     tree_y_Scrollbar = ttk.Scrollbar(treeframe , orient="vertical")
