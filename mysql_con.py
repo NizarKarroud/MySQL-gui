@@ -126,8 +126,10 @@ def alter_table(db_name , table, values , columns,key_val_couple):
                     print(query_update) 
                     con_cursor.execute(query_update)
 
-                    ref_set_clause = ','.join(set_clause.split(',')[:len(key_val_couple)]) 
+                    set_clause_keys = {key : value for key , value in zip(columns , values) if any(key == key_couple[0] for key_couple in key_val_couple)}
+                    ref_set_clause = ','.join([f"{column} = {value}" for column , value in set_clause_keys.items()])
                     for relation in foreign_relations :
+                        print(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
                         con_cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
 
                     con_cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
@@ -142,7 +144,9 @@ def alter_table(db_name , table, values , columns,key_val_couple):
             print(query_update) 
             con_cursor.execute(query_update)
 
-            ref_set_clause = ','.join(set_clause.split(',')[:len(key_val_couple)]) 
+
+            set_clause_keys = {key : value for key , value in zip(columns , values) if any(key == key_couple[0] for key_couple in key_val_couple)}
+            ref_set_clause = ','.join([f"{column} = {value}" for column , value in set_clause_keys.items()])
             for relation in foreign_relations :
                 print(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
                 con_cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
