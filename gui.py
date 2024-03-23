@@ -189,8 +189,48 @@ def tables_frame(db_name):
     priv_frame.pack(fill="both" , expand=True)
     notebook.add(priv_frame , text='User Privileges')
 
-    export_frame = ttk.Frame(notebook)
-    export_frame.pack(fill="both" , expand=True)
+    export_frame = ttk.Frame(notebook )
+    export_frame.pack(fill="both" , expand=True , padx=30 , pady= 30)
+
+    export_label = ttk.Label(export_frame , text="Export Database's Tables" , font=("Helvetica",20))
+    export_label.grid(row=0 , column=0 , padx=240 , pady=30)
+
+    path_label = ttk.Label(export_frame , text="Path : ")
+    path_label.grid(row= 1 , column=0 , sticky="w" , padx=80 , pady=80 )
+    
+    path_var = tk.StringVar()
+    path_entry = ttk.Entry(export_frame , textvariable=path_var , width=60)
+    path_entry.grid(row= 1 , column=0 , sticky="w" , padx=(150,50) , pady=80)
+
+    table_list_box = tk.Listbox(export_frame, selectmode=tk.MULTIPLE , height=25 , width=40)
+
+    export_options = ['csv' , 'html']
+    type_var = tk.StringVar()
+    type_var.set(export_options[0])
+
+    export_type = ttk.Combobox(export_frame , textvariable=type_var , values=export_options , state='readonly')
+    export_type.grid(row= 1 , column=0 , sticky="e" , padx=(110,), pady=80)
+
+    export_button = ttk.Button(export_frame , text='export' ,command=lambda : mysql_con.export_database(db_name,table_list=[table_list_box.get(idx) for idx in table_list_box.curselection()], path=rf"{path_var.get()}" , extension=type_var.get()))
+    export_button.grid(row= 1 , column=0 , sticky="e" , padx=(40,), pady=80)
+
+    for option in mysql_con.show_tables(db_name):
+        table_list_box.insert(tk.END, option[0])
+    table_list_box.grid(row=2 , column=0 ,sticky="w", padx=80)
+
+    def select_all():
+        deselect_checkbox.deselect()
+        table_list_box.selection_set(0, tk.END)
+
+    def deselect_all():
+        select_checkbox.deselect()
+        table_list_box.selection_clear(0, tk.END)
+
+    deselect_checkbox = tk.Checkbutton(export_frame, text="Deselect all tables", command=lambda : deselect_all())
+    deselect_checkbox.grid(row=2 , column=0 ,sticky="e", padx=(30 ,180) , pady=(10,320))
+    select_checkbox = tk.Checkbutton(export_frame, text="Select all tables", command=lambda : select_all())
+    select_checkbox.grid(row=2, column=0 ,sticky="e", padx=(30,315) ,pady=(10 ,320))
+
     notebook.add(export_frame , text='Export')
 
     migrate_frame = ttk.Frame(notebook)

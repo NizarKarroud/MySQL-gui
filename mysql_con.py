@@ -1,6 +1,8 @@
 import mysql.connector
-import pandas
+import pandas as pd
 import os
+import shutil
+import pdfkit as pdf
 
 global_connection = None
 hostname = None
@@ -159,19 +161,25 @@ def alter_table(db_name , table, values , columns,key_val_couple):
 
 # think about migration (sqlalchemy )
         
-
 def exec_query(query) : 
     try :
         con_cursor = global_connection.cursor()
         con_cursor.execute(query)
-    # handle diff type of queries ( SELECT IS THE ONLY ONE THAT RETURNS )
+    # handle diff extension of queries ( SELECT IS THE ONLY ONE THAT RETURNS )
     except Exception as err:
         return err
 
 
-def export_database(db_name , path):
+def export_database(db_name ,table_list, path, extension):
+    tables = table_list[:]
+    print(tables)
+    print(path)
+    print(extension)
+    print(db_name)
+    # checking if the folder where the archive is going to be located exists
     if os.path.exists(path):
         new_folder_path = os.path.join(path, db_name)
+
         # Check if the folder already exists within the parent path
         if not os.path.exists(new_folder_path):
             try:
@@ -179,7 +187,34 @@ def export_database(db_name , path):
                 os.makedirs(new_folder_path)
             except OSError as e:
                 return f"Error creating folder at {new_folder_path}: {e}"
+    
+        export_errors = []  # List to store export errors for each table
+        for table in tables:
+            columns , rows , prim = tuple(show_table_records(table))
+            try :
+                df = pd.DataFrame(rows , columns=columns)
+                table_file_path = os.path.join(new_folder_path, f"{table}.{extension}")
+                if extension == 'csv' : 
+                    df.to_csv(table_file_path ,index=False)
+
+                else :
+                    df.to_html(f"{table_file_path}" , index=False)
+
+            except Exception as err :
+                export_errors.append(f"Error exporting {table} to {extension} {err}")
+        if export_errors:
+            # If there were export errors return the errors
+            return export_errors
+        
+        # Archive the folder
+        try:
+            shutil.make_archive(new_folder_path, 'zip', new_folder_path)
+            # Remove the original folder after archiving
+            shutil.rmtree(new_folder_path)
+            return f"Exported and archived data successfully at {new_folder_path}.zip"
+        
+        except Exception as e:
+                return f"Error archiving folder at {new_folder_path}: {e}"
+    
     else:
         return f"Parent path '{path}' does not exist."
-    
-    #
