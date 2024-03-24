@@ -176,14 +176,48 @@ def tables_frame(db_name):
     operations_frame.pack(fill="both" , expand=True)
     notebook.add(operations_frame , text='Operations')
 
-    copy_frame = ttk.Frame(notebook)
-    copy_frame.pack(fill="both" , expand=True)
-    notebook.add(copy_frame , text='Search')
+    search_frame = ttk.Frame(notebook)
+    search_frame.pack(fill="both" , expand=True)
+    notebook.add(search_frame , text='Search')
 
-    migrate_frame = ttk.Frame(notebook)
-    migrate_frame.pack(fill="both" , expand=True)
-    notebook.add(migrate_frame , text='Copy Database')
+    copy_db = ttk.Frame(notebook)
+    copy_db.pack(fill="both" , expand=True)
 
+    copy_label = ttk.Label(copy_db , text='Copy Database' ,  font=("Helvetica",20))
+    copy_label.grid(row=0 , column=0 , padx=240 , pady=30,sticky='w')
+
+    db_copy_label = ttk.Label(copy_db , text='Database : ' ,  font=("Helvetica",14))
+    db_copy_label.grid(row=1, column=0 , padx=100 , pady=60 ,sticky='w')
+
+    db_copy_to = tk.StringVar()
+    db_copy_entry = ttk.Entry(copy_db , textvariable=db_copy_to , width=40)
+    db_copy_entry.grid(row=1, column=0 , padx=220 , pady=60,sticky='w')
+
+    copy_button = ttk.Button(copy_db , text='copy' ,command=lambda :...)
+    copy_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
+
+    def deselect_when_selected(checkbutton):
+        checkbutton.deselect()
+
+    struct_data = tk.Checkbutton(copy_db, text="Structure and data", command=lambda : deselect_when_selected(struct_only))
+    struct_data.grid(row=2 , column=0 , padx=100, pady=(10,10), sticky='w')
+
+    struct_only = tk.Checkbutton(copy_db , text="Structure only", command=lambda : deselect_when_selected(struct_data))
+    struct_only.grid(row=2 , column=0 , padx=100, pady=(60,10), sticky='w')
+
+    create_before = tk.Checkbutton(copy_db, text="CREATE DATABASE before copying")
+    create_before.grid(row=3 , column=0 , padx=100, pady=(20,35), sticky='w')
+
+    drop_if_exist = tk.Checkbutton(copy_db, text="DROP TABLES if they exist")
+    drop_if_exist.grid(row=3 , column=0 , padx=100, pady=(35,10) ,sticky='w')
+
+    add_constraints = tk.Checkbutton(copy_db, text="Add constraints")
+    add_constraints.grid(row=3 , column=0 , padx=100, pady=(80, 10), sticky='w')
+
+    add_priv = tk.Checkbutton(copy_db, text="Adjust privileges")
+    add_priv.grid(row=3 , column=0 , padx=100, pady=(120, 10), sticky='w')
+
+    notebook.add(copy_db , text='Copy Database')
 
     priv_frame = ttk.Frame(notebook)
     priv_frame.pack(fill="both" , expand=True)
@@ -233,9 +267,17 @@ def tables_frame(db_name):
 
     notebook.add(export_frame , text='Export')
 
-    migrate_frame = ttk.Frame(notebook)
-    migrate_frame.pack(fill="both" , expand=True)
-    notebook.add(migrate_frame , text='Database migration')
+    sql_dump_frame = ttk.Frame(notebook)
+    sql_dump_frame.pack(expand=True ,fill='both')
+    notebook.add(child=sql_dump_frame ,text='SQL Dump')
+
+    db_migration = ttk.Frame(notebook)
+    db_migration.pack(fill="both" , expand=True)
+    notebook.add(db_migration , text='Database migration')
+
+    triggers_frame = ttk.Frame(notebook)
+    triggers_frame.pack(fill="both" , expand=True)
+    notebook.add(triggers_frame , text='Triggers')
     
     # text_box = tk.Text(export_frame)
     # text_box.pack(padx=20 , pady= (20,10) ,fill='both' , expand=True)
@@ -358,6 +400,7 @@ def table_tabs(db_name , table):
         treeview.column(column, anchor="center")
         treeview.heading(column , text=column)
 
+
     # Insert data into the treeview
     for row in rows :
         treeview.insert("" , tk.END , values=row)
@@ -372,9 +415,44 @@ def table_tabs(db_name , table):
 
     notebook.add(child=treeframe ,text='Records')
 
+    search_frame = ttk.Frame(notebook)
+    search_frame.pack(expand=True ,fill='both')
+    notebook.add(child=search_frame ,text='Insert')
+
+    insert_frame = ttk.Frame(notebook)
+    insert_frame.pack(expand=True ,fill='both')
+    notebook.add(child=insert_frame ,text='Insert')
+
+    drop_table_frame = ttk.Frame(notebook)
+    drop_table_frame.pack(expand=True ,fill='both')
+    notebook.add(child=drop_table_frame ,text='Drop Table')
+    
+    drop_col_frame = ttk.Frame(notebook)
+    drop_col_frame.pack(expand=True ,fill='both')
+    notebook.add(child=drop_col_frame ,text='Rename Table')
+
+    empty_table_frame = ttk.Frame(notebook)
+    empty_table_frame.pack(expand=True ,fill='both')
+    notebook.add(child=empty_table_frame ,text='Empty Table')
+        
+    rename_table_frame = ttk.Frame(notebook)
+    rename_table_frame.pack(expand=True ,fill='both')
+    notebook.add(child=rename_table_frame ,text='Rename Table')
+
+    priv_table_frame = ttk.Frame(notebook)
+    priv_table_frame.pack(expand=True ,fill='both')
+    notebook.add(child=priv_table_frame ,text='Priveleges')
+
+    
+    sql_dump_frame = ttk.Frame(notebook)
+    sql_dump_frame.pack(expand=True ,fill='both')
+    notebook.add(child=sql_dump_frame ,text='SQL Dump')
+
+    data_vis_frame = ttk.Frame(notebook)
+    data_vis_frame.pack(expand=True ,fill='both')
+    notebook.add(child=data_vis_frame ,text='Visualize Data')
 
 """ UPDATE row values """
-
 def update_row_window(db_name , frame ,table , columns, selected_row , key_val_cpl):    
     window = tk.Toplevel(app)
     window.geometry("800x600")

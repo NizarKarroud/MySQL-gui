@@ -218,3 +218,17 @@ def export_database(db_name ,table_list, path, extension):
     
     else:
         return f"Parent path '{path}' does not exist."
+
+"""
+ALTER TABLE current_table_name
+RENAME TO new_table_name;
+"""
+def search_database():
+    ...
+    #take a look at test.py
+
+
+def search_table():
+    ...
+    #take a look at test.py
+    
