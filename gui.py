@@ -3,6 +3,9 @@ import mysql_con
 from tkinter import ttk , messagebox
 import tkinter as tk
 import ttkbootstrap
+import json
+import webbrowser
+
 
 frame_to_destroy = []
 
@@ -49,9 +52,47 @@ def db_to_tb(db_name , notebook ,table):
 
 """ For the Sql Query Tab"""
 def sql_query(query):
-    mysql_con.exec_query(query)
-    # work on the query in th mysql_con file
+    result = mysql_con.exec_query(query)
+    if isinstance(result, tuple):  # Check if result is a tuple (indicating data query)
+        columns, rows = result
+        window = tk.Toplevel(app)
+        window.geometry("800x600")
+        window.title("View Search Results")
 
+        treeframe = ttk.Frame(window)
+        treeframe.pack(expand=True , fill='both')
+
+        # Add vertical scrollbar
+        tree_y_Scrollbar = ttk.Scrollbar(treeframe , orient="vertical")
+        tree_y_Scrollbar.pack(side="right",fill="y")
+
+        # Add horizontal scrollbar
+        tree_x_Scrollbar = ttk.Scrollbar(treeframe , orient="horizontal")
+        tree_x_Scrollbar.pack(fill="x" , side="bottom")
+        
+        # Create a Treeview widget
+        treeview = ttk.Treeview(treeframe,show='headings', xscrollcommand=tree_x_Scrollbar.set ,yscrollcommand= tree_y_Scrollbar.set,  columns=columns ,height=len(rows))
+        treeview.pack()
+
+    # add the columns as Headers
+        for column in columns :
+            treeview.column(column, anchor="center")
+            treeview.heading(column , text=column)
+
+
+    # Insert data into the treeview
+        for row in rows :
+            treeview.insert("" , tk.END , values=row)
+
+        tree_y_Scrollbar.config(command=treeview.yview)
+        tree_x_Scrollbar.config(command=treeview.xview)
+
+    elif result ==True :
+        messagebox.showerror(message="Executed successfully")
+    else:
+        messagebox.showerror(title='Error' , message=result )
+
+    # if headers ==None and rows ==none
 def click_on_search_row(db_name , term , table_col_couple):
     table_col_couple.pop()
     columns , rows , primary_key = mysql_con.show_search_records(table_col_couple, term )
@@ -90,7 +131,6 @@ def click_on_search_row(db_name , term , table_col_couple):
 
 
     treeview.bind('<Double-1>', lambda event , headers=columns: click_on_row(db_name , treeframe,primary_key ,table_col_couple[0] , headers , treeview.item(treeview.selection())['values']))
-
     
 """ What happens when you click on a row (Record) """
 def click_on_row(db_name , frame,primary_keys,table ,headers , selected_row):
@@ -148,6 +188,21 @@ def create_login_page():
 
     app.bind("<Return>", on_enter)
     
+    def theme_button(button_name , title , padding ) :
+        button_name = ttk.Button(master=frame, text=title , style="Hyperlink.TButton" , command= lambda : save_theme_settings(title.split()[0].lower()) )
+        button_name.pack(anchor='w' , side='left' , pady=(150,10) , padx=padding)
+
+    theme_button('darkly_label' , "Darkly Theme" , 5)
+    theme_button('solar_label' , "Solar Theme" , 5)
+    theme_button('superhero_label' , "Superhero Theme" , 5)
+    theme_button('Cyborg_label' , "Cyborg Theme" , 5)
+    theme_button('Vapor_label' , "Vapor Theme" , 5)
+    theme_button('solar_label' , "Morph Theme" , 5)
+
+    doc_button = ttk.Button(master=frame, text="Documentation" , style="Hyperlink.TButton" , command=lambda : webbrowser.open('https://github.com/Baragsen/MySQL-gui'))
+    doc_button.pack(anchor='e' , side='right' , pady=(150,10) , padx=5)
+
+
 """ The Database Menu and Create new Database functionality """
 def database_menu():
     menu_frame = CTkScrollableFrame(master=app)
@@ -299,14 +354,11 @@ def tables_frame(db_name):
     create_before = tk.Checkbutton(copy_db, text="CREATE DATABASE before copying")
     create_before.grid(row=3 , column=0 , padx=100, pady=(20,35), sticky='w')
 
-    drop_if_exist = tk.Checkbutton(copy_db, text="DROP TABLES if they exist")
-    drop_if_exist.grid(row=3 , column=0 , padx=100, pady=(35,10) ,sticky='w')
-
     add_constraints = tk.Checkbutton(copy_db, text="Add constraints")
-    add_constraints.grid(row=3 , column=0 , padx=100, pady=(80, 10), sticky='w')
+    add_constraints.grid(row=3 , column=0 , padx=100, pady=(35,10), sticky='w')
 
     add_priv = tk.Checkbutton(copy_db, text="Adjust privileges")
-    add_priv.grid(row=3 , column=0 , padx=100, pady=(120, 10), sticky='w')
+    add_priv.grid(row=3 , column=0 , padx=100, pady=(80, 10), sticky='w')
 
     notebook.add(copy_db , text='Copy Database')
 
@@ -360,6 +412,39 @@ def tables_frame(db_name):
 
     sql_dump_frame = ttk.Frame(notebook)
     sql_dump_frame.pack(expand=True ,fill='both')
+
+    sql_dump_title = ttk.Label(sql_dump_frame , text='Dump Database' ,  font=("Helvetica",20))
+    sql_dump_title.grid(row=0 , column=0 , padx=240 , pady=30,sticky='w')
+
+    dump_path_label = ttk.Label(sql_dump_frame , text='Path : ' ,  font=("Helvetica",14))
+    dump_path_label.grid(row=1, column=0 , padx=100 , pady=60 ,sticky='w')
+
+    dump_path= tk.StringVar()
+    dump_path_entry = ttk.Entry(sql_dump_frame , textvariable=dump_path , width=40)
+    dump_path_entry.grid(row=1, column=0 , padx=220 , pady=60,sticky='w')
+
+    dump_button = ttk.Button(sql_dump_frame , text='dump' ,command=lambda :...)
+    dump_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
+
+    def deselect_when_selected(checkbutton , checkbutton2):
+        checkbutton.deselect()
+        checkbutton2.deselect()
+
+    struct_data = tk.Checkbutton(sql_dump_frame, text="Structure and data", command=lambda : deselect_when_selected(struct_only , data_only))
+    struct_data.grid(row=2 , column=0 , padx=100, pady=(10,10), sticky='w')
+
+    struct_only = tk.Checkbutton(sql_dump_frame , text="Structure only", command=lambda : deselect_when_selected(struct_data , data_only))
+    struct_only.grid(row=2 , column=0 , padx=100, pady=(60,10), sticky='w')
+
+    data_only = tk.Checkbutton(sql_dump_frame, text="Data Only",command=lambda : deselect_when_selected(struct_data , struct_only))
+    data_only.grid(row=2 , column=0 , padx=100, pady=(130 ,35), sticky='w')
+
+    add_routines = tk.Checkbutton(sql_dump_frame, text="Copy Routines")
+    add_routines.grid(row=2 , column=0 , padx=100, pady=(180,10), sticky='w')
+
+    add_events = tk.Checkbutton(sql_dump_frame, text="Copy Events")
+    add_events.grid(row=2 , column=0 , padx=100, pady=(220, 10), sticky='w')
+
     notebook.add(child=sql_dump_frame ,text='SQL Dump')
 
     db_migration = ttk.Frame(notebook)
@@ -645,12 +730,28 @@ def update_row_window(db_name , frame ,table , columns, selected_row , key_val_c
         mysql_con.alter_table(db_name,table , new_values , columns ,key_val_cpl)
         table_tabs(db_name , table)
 
+
+def save_theme_settings(theme_name):
+    with open('theme_settings.json', 'w') as file:
+        json.dump({'theme': theme_name}, file)
+
+def load_theme_settings():
+    try:
+        with open('theme_settings.json', 'r') as file:
+            settings = json.load(file)
+            return settings['theme']
+    except FileNotFoundError:
+        return None
+    
 app = tk.Tk()
 app.geometry("1024x768")
 
-style = ttkbootstrap.Style(theme="darkly")
+saved_theme = load_theme_settings()
+if saved_theme:
+    style = ttkbootstrap.Style(theme=saved_theme)
+else:
+    style = ttkbootstrap.Style(theme="darkly")
 style.theme_use()
-
 create_login_page()
 app.mainloop()
 

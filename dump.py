@@ -1,12 +1,25 @@
 import subprocess
 
-def execute_mysql_dump(path,file_name ,hostname, user , password , database):
+def build_mysqldump_command(hostname, user, password,database, *args):
+    # Start building the command with basic arguments
+    command = ['mysqldump', '-h', hostname, '-u', user, f'-p{password}']
+
+    # Add optional options based on the specified arguments
+    for arg in args:
+        command.append(arg)
+
+    # Append the database name at the end
+    command.append(database)
+
+    return command
+
+def execute_mysql_dump(path, command):
     try:
         # Open the output file in write mode
-        with open(fr"{path}\{file_name}.sql", 'w') as output_file:
+        with open(path, 'w') as output_file:
             # Open MySQL shell using subprocess
             mysql_process = subprocess.Popen(
-                ['mysqldump', '-h', f'{hostname}', '-u', f'{user}', f'-p{password}', '--add-drop-table' , f'{database}'],
+                command,
                 stdout=output_file,  # Redirect stdout to the output file
                 stderr=subprocess.PIPE,  # Capture stderr for error handling
                 universal_newlines=True
@@ -24,15 +37,14 @@ def execute_mysql_dump(path,file_name ,hostname, user , password , database):
         print(f"An error occurred: {e}")
 
 """
-de base struct and data
 --no-data : just structure
---no-create-info :  jusr data
+--no-create-info :  just data
 --add-drop-table : drop table if exist
- --routines 
- --events 
+--routines 
+--events 
 """
 
-
-
+command = build_mysqldump_command("localhost" , "root" , "root" , "etudiant"  ,"--events", )
+print(*command)
 # Call the function to execute mysqldump
-execute_mysql_dump(r"C:\Users\Nizar\Documents\mysql_gui" ,"etu_priv" , "localhost" , "root" , "root" , "etudiant")
+execute_mysql_dump(r"C:\Users\Nizar\Documents\mysql_gui\dump.sql"  , command)

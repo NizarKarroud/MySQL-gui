@@ -172,14 +172,23 @@ def alter_table(db_name , table, values , columns,key_val_couple):
 
 # think about migration (sqlalchemy )
         
-def exec_query(query) : 
-    try :
+def exec_query(query):
+    try:
         con_cursor = global_connection.cursor()
         con_cursor.execute(query)
-    # handle diff extension of queries ( SELECT IS THE ONLY ONE THAT RETURNS )
+        
+        # Check if the query is a SELECT query or not
+        is_data_query = con_cursor.description is not None
+        
+        if is_data_query:
+            result = con_cursor.fetchall()
+            headers = [i[0] for i in con_cursor.description]
+            return headers, result
+        else:
+            global_connection.commit()  # Commit changes for INSERT, UPDATE, DELETE, etc.
+            return True  # Query executed successfully
     except Exception as err:
-        return err
-
+        return err 
 
 def export_database(db_name ,table_list, path, extension):
     tables = table_list[:]
