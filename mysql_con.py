@@ -2,7 +2,7 @@ import mysql.connector
 import pandas as pd
 import os
 import shutil
-import pdfkit as pdf
+from collections import Counter
 
 global_connection = None
 hostname = None
@@ -172,10 +172,7 @@ def exec_query(query) :
 
 def export_database(db_name ,table_list, path, extension):
     tables = table_list[:]
-    print(tables)
-    print(path)
-    print(extension)
-    print(db_name)
+
     # checking if the folder where the archive is going to be located exists
     if os.path.exists(path):
         new_folder_path = os.path.join(path, db_name)
@@ -223,12 +220,64 @@ def export_database(db_name ,table_list, path, extension):
 ALTER TABLE current_table_name
 RENAME TO new_table_name;
 """
-def search_database():
-    ...
-    #take a look at test.py
+def search_database(cursor ,database, term_to_search ):
+    make_db_search_queries = f"""
+    SELECT CONCAT(
+        'SELECT ''', TABLE_NAME, '.', COLUMN_NAME, ''' AS table_column, ''', COLUMN_NAME, ''' AS value, ''', TABLE_NAME, ''' AS table_name FROM ',
+        TABLE_NAME, ' WHERE ', COLUMN_NAME, ' LIKE ''{term_to_search}'''
+    )
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = '{database}';
+    """
+    cursor.execute(make_db_search_queries)
 
+    results = cursor.fetchall() 
 
-def search_table():
-    ...
-    #take a look at test.py
-    
+    final_result = []
+    item_counter = Counter()
+
+    for row in results:
+        # Extract the SELECT statement from the row
+        select_statement = row[0].rstrip(" \" ") + ";"
+        # Execute the SELECT statement
+        cursor.execute(select_statement)
+        # Fetch and print the results of the SELECT statement
+        select_results = cursor.fetchall()
+
+        item_counter.update(select_results)
+
+    return list(item_counter.items())
+
+def search_table(cursor , term_to_search , database , table):
+    rows = []
+    search_table_query = f"""
+        SELECT CONCAT('SELECT * FROM ', table_name, ' WHERE ', column_name, ' LIKE ''{term_to_search}''')
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = '{database}' AND TABLE_NAME = '{table}';
+        """
+    cursor.execute(search_table_query)
+
+    results = cursor.fetchall()  
+    printed_header = False
+    for row in results:
+    # Extract the SELECT statement from the row
+        select_statement = row[0].rstrip(" \" ") + ";"
+        
+        # Execute the SELECT statement
+        cursor.execute(select_statement)
+
+        # Fetch and print the results of the SELECT statement
+        select_results = cursor.fetchall()
+        
+        # Print headers only once
+        if not printed_header:
+            headers = [i[0] for i in cursor.description]
+            header = headers
+            printed_header = True
+
+        for result in select_results:
+            if result:
+                rows.append(result)
+
+    return(header , rows)
+    cursor.close()    
