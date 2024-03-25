@@ -52,6 +52,46 @@ def sql_query(query):
     mysql_con.exec_query(query)
     # work on the query in th mysql_con file
 
+def click_on_search_row(db_name , term , table_col_couple):
+    table_col_couple.pop()
+    columns , rows , primary_key = mysql_con.show_search_records(table_col_couple, term )
+    
+    window = tk.Toplevel(app)
+    window.geometry("800x600")
+    window.title("View Search Results")
+
+    treeframe = ttk.Frame(window)
+    treeframe.pack(expand=True , fill='both')
+
+    # Add vertical scrollbar
+    tree_y_Scrollbar = ttk.Scrollbar(treeframe , orient="vertical")
+    tree_y_Scrollbar.pack(side="right",fill="y")
+
+    # Add horizontal scrollbar
+    tree_x_Scrollbar = ttk.Scrollbar(treeframe , orient="horizontal")
+    tree_x_Scrollbar.pack(fill="x" , side="bottom")
+    
+    # Create a Treeview widget
+    treeview = ttk.Treeview(treeframe,show='headings', xscrollcommand=tree_x_Scrollbar.set ,yscrollcommand= tree_y_Scrollbar.set,  columns=columns ,height=len(rows))
+    treeview.pack()
+
+    # add the columns as Headers
+    for column in columns :
+        treeview.column(column, anchor="center")
+        treeview.heading(column , text=column)
+
+
+    # Insert data into the treeview
+    for row in rows :
+        treeview.insert("" , tk.END , values=row)
+
+    tree_y_Scrollbar.config(command=treeview.yview)
+    tree_x_Scrollbar.config(command=treeview.xview)
+
+
+    treeview.bind('<Double-1>', lambda event , headers=columns: click_on_row(db_name , treeframe,primary_key ,table_col_couple[0] , headers , treeview.item(treeview.selection())['values']))
+
+    
 """ What happens when you click on a row (Record) """
 def click_on_row(db_name , frame,primary_keys,table ,headers , selected_row):
     row_data = list(zip(headers,selected_row))
@@ -198,7 +238,7 @@ def tables_frame(db_name):
         result_frame = ttk.Frame(notebook)
         result_frame.pack(fill="both" , expand=True)
         search_result = mysql_con.search_database(db_name , term_to_search)
-        result_columns = ['Table' , 'Column' , 'matches' , 'Browse']
+        result_columns = ['Table' , 'Column' , 'matches']
     # Add vertical scrollbar
         tree_y_Scrollbar = ttk.Scrollbar(result_frame , orient="vertical")
         tree_y_Scrollbar.pack(side="right",fill="y")
@@ -225,6 +265,8 @@ def tables_frame(db_name):
 
         tree_y_Scrollbar.config(command=treeview.yview)    
         tree_x_Scrollbar.config(command=treeview.xview)    
+
+        treeview.bind('<Double-1>', lambda event : click_on_search_row(db_name ,term_to_search ,treeview.item(treeview.selection())['values']))
 
 
     notebook.add(search_frame , text='Search')

@@ -64,6 +64,17 @@ def drop_db(db_name):
     except Exception as err:
         return err
 
+def show_search_records(table_col_couple , term):
+    try :
+        table , column = table_col_couple  
+        con_cursor = global_connection.cursor()
+        con_cursor.execute(f"SELECT * FROM {table} WHERE {column} = '{term}';")
+        rows = con_cursor.fetchall()
+        columns = [i[0] for i in con_cursor.description]
+        return columns,rows,get_prim_keys(con_cursor,table)
+    except Exception as err :
+        print(err) 
+        
 def show_table_records(table):
     try :
         con_cursor = global_connection.cursor()
@@ -283,4 +294,3 @@ def search_table(term_to_search , database , table):
                 rows.append(result)
 
     return(header , rows)
-    cursor.close()    
