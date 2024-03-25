@@ -178,6 +178,55 @@ def tables_frame(db_name):
 
     search_frame = ttk.Frame(notebook)
     search_frame.pack(fill="both" , expand=True)
+
+    search_title_label = ttk.Label(search_frame , text='Search in Database' , font=("Helvetica",24))
+    search_title_label.grid(row=0 , column=0 , padx=250 , pady=50)
+    
+    search_label = ttk.Label(search_frame , text='Value to search for : ', font=("Helvetica",12))
+    search_label.grid(row=1 , column=0 , pady=60 ,padx=40 , sticky='w')
+
+    search_term = tk.StringVar()
+    search_entry = ttk.Entry(search_frame , textvariable=search_term , width=40)
+    search_entry.grid(row=1 , column=0 , pady=60 ,padx=200 , sticky='w')
+    
+    search_button = ttk.Button(search_frame , text='Search' ,width=25, command=lambda : search_database(db_name, search_term.get()))
+    search_button.grid(row=1 , column=0 , pady=60 ,padx=100 , sticky='e')
+
+    def search_database(db_name , term_to_search ):
+        search_frame.destroy()
+
+        result_frame = ttk.Frame(notebook)
+        result_frame.pack(fill="both" , expand=True)
+        search_result = mysql_con.search_database(db_name , term_to_search)
+        result_columns = ['Table' , 'Column' , 'matches' , 'Browse']
+    # Add vertical scrollbar
+        tree_y_Scrollbar = ttk.Scrollbar(result_frame , orient="vertical")
+        tree_y_Scrollbar.pack(side="right",fill="y")
+
+        tree_x_Scrollbar = ttk.Scrollbar(result_frame , orient='horizontal')
+        tree_x_Scrollbar.pack(side='bottom',fill="x")
+        
+        # Create a Treeview widget
+        treeview = ttk.Treeview(result_frame,show='headings',xscrollcommand= tree_x_Scrollbar.set, yscrollcommand= tree_y_Scrollbar.set,  columns=result_columns,height=len(search_result))
+        treeview.pack()
+
+        # add the columns as Headers
+        for column in result_columns :
+            treeview.column(column, anchor="center")
+            treeview.heading(column , text=column)
+
+
+        # Insert data into the treeview
+        for row in search_result :
+            inner_tuple, element = row[0], row[1]
+            inner_elements = [item for item in inner_tuple]
+            values_to_insert = inner_elements + [element]
+            treeview.insert("" , tk.END , values=values_to_insert)
+
+        tree_y_Scrollbar.config(command=treeview.yview)    
+        tree_x_Scrollbar.config(command=treeview.xview)    
+
+
     notebook.add(search_frame , text='Search')
 
     copy_db = ttk.Frame(notebook)
@@ -417,7 +466,54 @@ def table_tabs(db_name , table):
 
     search_frame = ttk.Frame(notebook)
     search_frame.pack(expand=True ,fill='both')
-    notebook.add(child=search_frame ,text='Insert')
+
+
+
+    search_title_label = ttk.Label(search_frame , text='Search in Table' , font=("Helvetica",24))
+    search_title_label.grid(row=0 , column=0 , padx=250 , pady=50)
+    
+    search_label = ttk.Label(search_frame , text='Value to search for : ', font=("Helvetica",12))
+    search_label.grid(row=1 , column=0 , pady=60 ,padx=40 , sticky='w')
+
+    search_term = tk.StringVar()
+    search_entry = ttk.Entry(search_frame , textvariable=search_term , width=40)
+    search_entry.grid(row=1 , column=0 , pady=60 ,padx=200 , sticky='w')
+    
+    search_button = ttk.Button(search_frame , text='Search' ,width=25, command=lambda : search_table(table ,db_name, search_term.get()))
+    search_button.grid(row=1 , column=0 , pady=60 ,padx=80, sticky='e')
+
+    def search_table(table ,db_name , term_to_search ):
+        search_frame.destroy()
+
+        result_frame = ttk.Frame(notebook)
+        result_frame.pack(fill="both" , expand=True)
+        headers , rows = mysql_con.search_table(term_to_search, db_name , table)
+        
+         # Add vertical scrollbar
+        tree_y_Scrollbar = ttk.Scrollbar(result_frame , orient="vertical")
+        tree_y_Scrollbar.pack(side="right",fill="y")
+
+        tree_x_Scrollbar = ttk.Scrollbar(result_frame , orient='horizontal')
+        tree_x_Scrollbar.pack(side='bottom',fill="x")
+        
+        # Create a Treeview widget
+        treeview = ttk.Treeview(result_frame,show='headings',xscrollcommand= tree_x_Scrollbar.set, yscrollcommand= tree_y_Scrollbar.set,  columns=headers,height=len(rows))
+        treeview.pack()
+
+        # add the columns as Headers
+        for column in headers :
+            treeview.column(column, anchor="center")
+            treeview.heading(column , text=column)
+
+
+        # Insert data into the treeview
+        for row in rows :
+            treeview.insert("" , tk.END , values=row)
+
+        tree_y_Scrollbar.config(command=treeview.yview)    
+        tree_x_Scrollbar.config(command=treeview.xview) 
+         
+    notebook.add(child=search_frame ,text='Search')
 
     insert_frame = ttk.Frame(notebook)
     insert_frame.pack(expand=True ,fill='both')
@@ -427,17 +523,13 @@ def table_tabs(db_name , table):
     drop_table_frame.pack(expand=True ,fill='both')
     notebook.add(child=drop_table_frame ,text='Drop Table')
     
-    drop_col_frame = ttk.Frame(notebook)
-    drop_col_frame.pack(expand=True ,fill='both')
-    notebook.add(child=drop_col_frame ,text='Rename Table')
+    rename_table_frame = ttk.Frame(notebook)
+    rename_table_frame.pack(expand=True ,fill='both')
+    notebook.add(child=rename_table_frame ,text='Rename Table')
 
     empty_table_frame = ttk.Frame(notebook)
     empty_table_frame.pack(expand=True ,fill='both')
     notebook.add(child=empty_table_frame ,text='Empty Table')
-        
-    rename_table_frame = ttk.Frame(notebook)
-    rename_table_frame.pack(expand=True ,fill='both')
-    notebook.add(child=rename_table_frame ,text='Rename Table')
 
     priv_table_frame = ttk.Frame(notebook)
     priv_table_frame.pack(expand=True ,fill='both')

@@ -220,14 +220,16 @@ def export_database(db_name ,table_list, path, extension):
 ALTER TABLE current_table_name
 RENAME TO new_table_name;
 """
-def search_database(cursor ,database, term_to_search ):
+def search_database(database, term_to_search ):
+    cursor = global_connection.cursor()
     make_db_search_queries = f"""
     SELECT CONCAT(
-        'SELECT ''', TABLE_NAME, '.', COLUMN_NAME, ''' AS table_column, ''', COLUMN_NAME, ''' AS value, ''', TABLE_NAME, ''' AS table_name FROM ',
+        'SELECT ''', TABLE_NAME, ''' AS table_name, ''', COLUMN_NAME, ''' AS value FROM ',
         TABLE_NAME, ' WHERE ', COLUMN_NAME, ' LIKE ''{term_to_search}'''
     )
     FROM INFORMATION_SCHEMA.COLUMNS
     WHERE TABLE_SCHEMA = '{database}';
+
     """
     cursor.execute(make_db_search_queries)
 
@@ -248,8 +250,9 @@ def search_database(cursor ,database, term_to_search ):
 
     return list(item_counter.items())
 
-def search_table(cursor , term_to_search , database , table):
+def search_table(term_to_search , database , table):
     rows = []
+    cursor = global_connection.cursor()
     search_table_query = f"""
         SELECT CONCAT('SELECT * FROM ', table_name, ' WHERE ', column_name, ' LIKE ''{term_to_search}''')
         FROM INFORMATION_SCHEMA.COLUMNS
