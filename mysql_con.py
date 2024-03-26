@@ -331,11 +331,52 @@ def sql_dump(path , *args):
             _, error = mysql_process.communicate()
 
             if error:
-                print(f"Error executing mysqldump: {error}")
-            else:
-                print("MySQL dump completed successfully.")
+                return error
+
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        return e
 
+def sql_import(path):
+    try:
+        con_cursor = global_connection.cursor()
+        # Read SQL file content
+        with open(path, 'r') as sql_file:
+            sql_script = sql_file.read()
+    
+        # Execute the SQL script
+        con_cursor.execute(sql_script , multi=True)
+        con_cursor.commit()
 
+    except Exception as err:
+        return err
+    
+def copy_db(db_name,*args):
+    existent_databases = show_databases()
+    if args[1] == 1 and not any(db_name in db_tuple for db_tuple in existent_databases):
+        create_database(db_name)
+
+    command = ['mysqldump', '-h', hostname, '-u', username, f'-p{passowrd}']
+
+    for arg in args[0]:
+        command.append(arg)
+
+    # Append the database name at the end
+    command.append(db)
+
+    try :
+        mysql_process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,  # Capture stdout
+            stderr=subprocess.PIPE,  # Capture stderr for error handling
+            universal_newlines=True
+        )
+
+        # Wait for the process to finish and get the stdout and stderr output
+        query, error = mysql_process.communicate()
+        new_con = mysql.connector.connect(host=hostname , user=username , password=passowrd, port=port ,database=db_name, auth_plugin='mysql_native_password')
+        con_cursor = new_con.cursor()
+        con_cursor.execute(query , multi=True)
+        global_connection.commit()
+    except Exception as e:
+        print(e)

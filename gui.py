@@ -230,7 +230,7 @@ def tables_frame(db_name):
     app.grid_columnconfigure(1, weight=1) 
     app.grid_rowconfigure(0, weight=1)
 
-    table_frame = tk.Canvas(master=notebook)
+    table_frame = tk.Canvas(master=notebook )
     table_frame.pack(fill="both" , expand=True)
 
     y_Scrollbar = ttk.Scrollbar(table_frame , orient="vertical")
@@ -239,16 +239,15 @@ def tables_frame(db_name):
     table_frame.config(yscrollcommand=y_Scrollbar.set)
     y_Scrollbar.config(command=table_frame.yview)
 
-    inner_frame = tk.Frame(table_frame , highlightbackground="black", highlightthickness=2  )
-    table_frame.create_window((0, 0) , window=inner_frame, anchor='nw')
-    # inner_frame.pack(expand=True , fill="both")
+    inner_frame = tk.Frame(table_frame )
+    table_frame.create_window((0, 0) , window=inner_frame, anchor='center' )
+
 
     tables = show_db_tables(db_name)
-    tables_buttons = [ttk.Button(inner_frame,text=table, command=lambda table=table[0] : db_to_tb(db_name ,notebook,table)).pack(side='top',anchor='center',fill='x',pady=10 ) for table in tables]
+    tables_buttons = [ttk.Button(inner_frame,text=table, command=lambda table=table[0] : db_to_tb(db_name ,notebook,table)).pack(side='top',anchor='center' , fill='x', padx=220, pady=10 ) for table in tables]
 
     inner_frame.update_idletasks()
     table_frame.config(scrollregion=table_frame.bbox("all"))
-
 
     # Bind the canvas scrolling to mousewheel events
     def _on_mousewheel(event):
@@ -267,9 +266,20 @@ def tables_frame(db_name):
     exec_button.pack(pady=(10,30),padx=20 , side='right')
     notebook.add(sql_frame , text='SQL')
 
-    operations_frame = ttk.Frame(notebook)
-    operations_frame.pack(fill="both" , expand=True)
-    notebook.add(operations_frame , text='Operations')
+    operations_tab = ttk.Frame(notebook)
+    operations_tab.pack(fill="both" , expand=True)
+
+    operations_frame = ttk.Frame(operations_tab , height=20)
+    operations_frame.pack(fill='x' ,expand=True)
+
+    table_name_entry =ttk.Label(operations_frame , text='Create new Table Page' ,font=('Helvetica', 14))
+    table_name_entry.pack(side='left' ,padx=(100,20), pady=(10,600))
+
+    # button to get to the table creation page
+    create_table_button =ttk.Button(operations_frame , text="Create new Table : " , command=lambda:table_create_page(table_frame))
+    create_table_button.pack(side='left' ,padx=100, pady=(10,600))
+
+    notebook.add(operations_tab , text='Operations')
 
     search_frame = ttk.Frame(notebook)
     search_frame.pack(fill="both" , expand=True)
@@ -339,26 +349,33 @@ def tables_frame(db_name):
     db_copy_entry = ttk.Entry(copy_db , textvariable=db_copy_to , width=40)
     db_copy_entry.grid(row=1, column=0 , padx=220 , pady=60,sticky='w')
 
-    copy_button = ttk.Button(copy_db , text='copy' ,command=lambda :...)
+    copy_button = ttk.Button(copy_db , text='copy' ,command=lambda :mysql_con.copy_db(db_copy_to.get() , get_args(cp_struct.get() ,cp_data.get()) ,create_before.get()))
     copy_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
 
-    def deselect_when_selected(checkbutton):
-        checkbutton.deselect()
+    cp_struct = tk.IntVar()
+    cp_data = tk.IntVar()
+    create_before = tk.IntVar()
 
-    struct_data = tk.Checkbutton(copy_db, text="Structure and data", command=lambda : deselect_when_selected(struct_only))
-    struct_data.grid(row=2 , column=0 , padx=100, pady=(10,10), sticky='w')
+    def get_args(cp_struct, cp_data ):
+        options = []
+        if cp_struct == 1:
+            options.append("--no-data") 
+        if cp_data == 1:
+            options.append("--no-create-info") 
 
-    struct_only = tk.Checkbutton(copy_db , text="Structure only", command=lambda : deselect_when_selected(struct_data))
-    struct_only.grid(row=2 , column=0 , padx=100, pady=(60,10), sticky='w')
+        return options
 
-    create_before = tk.Checkbutton(copy_db, text="CREATE DATABASE before copying")
-    create_before.grid(row=3 , column=0 , padx=100, pady=(20,35), sticky='w')
+    cp_struct_data = tk.Checkbutton(copy_db, text="Structure and data" , command=lambda : deselect_when_selected(cp_struct_only , cp_data_only))
+    cp_struct_data.grid(row=2 , column=0 , padx=100, pady=(10,10), sticky='w')
 
-    add_constraints = tk.Checkbutton(copy_db, text="Add constraints")
-    add_constraints.grid(row=3 , column=0 , padx=100, pady=(35,10), sticky='w')
+    cp_struct_only = tk.Checkbutton(copy_db , text="Structure only", variable=cp_struct, command=lambda : deselect_when_selected(cp_struct_data , cp_data_only))
+    cp_struct_only.grid(row=2 , column=0 , padx=100, pady=(60,10), sticky='w')
 
-    add_priv = tk.Checkbutton(copy_db, text="Adjust privileges")
-    add_priv.grid(row=3 , column=0 , padx=100, pady=(80, 10), sticky='w')
+    cp_data_only = tk.Checkbutton(copy_db, text="Data Only",variable=cp_data,command=lambda :deselect_when_selected(cp_struct_data,cp_struct_only))
+    cp_data_only.grid(row=2 , column=0 , padx=100, pady=(130 ,35), sticky='w')
+
+    create_before_button = tk.Checkbutton(copy_db, variable=create_before ,text="CREATE DATABASE before copying")
+    create_before_button.grid(row=2 , column=0 , padx=100, pady=(170,35), sticky='w')
 
     notebook.add(copy_db , text='Copy Database')
 
@@ -458,34 +475,36 @@ def tables_frame(db_name):
     data_only = tk.Checkbutton(sql_dump_frame, text="Data Only",variable=var_data_only,command=lambda : deselect_when_selected(struct_data , struct_only))
     data_only.grid(row=2 , column=0 , padx=100, pady=(130 ,35), sticky='w')
 
-    add_routines = tk.Checkbutton(sql_dump_frame,variable=var_add_routines, text="Copy Routines")
+    add_routines = tk.Checkbutton(sql_dump_frame,variable=var_add_routines, text="Add Routines")
     add_routines.grid(row=2 , column=0 , padx=100, pady=(180,10), sticky='w')
 
-    add_events = tk.Checkbutton(sql_dump_frame,variable=var_add_events, text="Copy Events")
+    add_events = tk.Checkbutton(sql_dump_frame,variable=var_add_events, text="Add Events")
     add_events.grid(row=2 , column=0 , padx=100, pady=(220, 10), sticky='w')
 
     notebook.add(child=sql_dump_frame ,text='SQL Dump')
 
-    db_import = ttk.Frame(notebook)
-    db_import.pack(fill="both" , expand=True)
+    db_import = ttk.Frame(notebook )
+    db_import.pack(fill="both" , expand=True )
+
+    sql_import = ttk.Label(db_import , text='Import Database' ,  font=("Helvetica",30))
+    sql_import.grid(row=0 , column=0 , padx=230 , pady=30,sticky='w')
+
+    sql_import_label = ttk.Label(db_import , text='Path : ' ,  font=("Helvetica",14))
+    sql_import_label.grid(row=1, column=0 , padx=100 , pady=60 ,sticky='w')
+
+    import_path= tk.StringVar()
+    import_path_label = ttk.Entry(db_import , textvariable=import_path , width=40)
+    import_path_label.grid(row=1, column=0 , padx=220 , pady=60,sticky='w')
+
+    import_button = ttk.Button(db_import , text='import' ,command=lambda : mysql_con.sql_import(import_path.get()))
+    import_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
+
     notebook.add(db_import , text='Import')
 
     triggers_frame = ttk.Frame(notebook)
     triggers_frame.pack(fill="both" , expand=True)
     notebook.add(triggers_frame , text='Triggers')
     
-    # text_box = tk.Text(export_frame)
-    # text_box.pack(padx=20 , pady= (20,10) ,fill='both' , expand=True)
-
-    # exec_button = ttk.Button(export_frame, text='Execute' , command= lambda : ...))
-    # exec_button.pack(pady=(10,30),padx=20 , side='right')
-
-
-
-
-    # # button to get to the table creation page
-    # create_table_button =ttk.Button(table_frame , text="Create new Table" , command=lambda:table_create_page(table_frame))
-    # create_table_button.pack(anchor="ne" ,padx=10 , pady=15)
 
     # # Button to drop the database
     # drop_db_button = ttk.Button(table_frame , text="Drop database" , command=lambda: drop_db(table_frame,db_name))
@@ -561,7 +580,7 @@ def table_create_page(table_frame):
 
         row = [ttk.Entry(create_column_frame, textvariable=column_name) , ttk.OptionMenu(create_column_frame, variable=option)]
         treeview.config(height=int(treeview.cget("height"))+1)
-        treeview.insert("" , tk.END , values=...)
+        treeview.insert("" , tk.END , values=...)   
 
 """ TABLE Tabs """
 def table_tabs(db_name , table):
