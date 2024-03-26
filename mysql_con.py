@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import shutil
 from collections import Counter
+import subprocess
 
 global_connection = None
 hostname = None
@@ -303,3 +304,38 @@ def search_table(term_to_search , database , table):
                 rows.append(result)
 
     return(header , rows)
+
+def sql_dump(path , *args):
+        # Start building the command with basic arguments
+    command = ['mysqldump', '-h', hostname, '-u', username, f'-p{passowrd}']
+
+    # Add optional options based on the specified arguments
+    for arg in args[0]:
+        command.append(arg)
+
+    # Append the database name at the end
+    command.append(db)
+
+    try:
+        # Open the output file in write mode
+        with open(path, 'w') as output_file:
+            # Open MySQL shell using subprocess
+            mysql_process = subprocess.Popen(
+                command,
+                stdout=output_file,  # Redirect stdout to the output file
+                stderr=subprocess.PIPE,  # Capture stderr for error handling
+                universal_newlines=True
+            )
+
+            # Wait for the process to finish and get the stderr output
+            _, error = mysql_process.communicate()
+
+            if error:
+                print(f"Error executing mysqldump: {error}")
+            else:
+                print("MySQL dump completed successfully.")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+

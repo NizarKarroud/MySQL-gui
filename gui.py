@@ -423,33 +423,52 @@ def tables_frame(db_name):
     dump_path_entry = ttk.Entry(sql_dump_frame , textvariable=dump_path , width=40)
     dump_path_entry.grid(row=1, column=0 , padx=220 , pady=60,sticky='w')
 
-    dump_button = ttk.Button(sql_dump_frame , text='dump' ,command=lambda :...)
+    dump_button = ttk.Button(sql_dump_frame , text='dump' ,command=lambda : mysql_con.sql_dump(dump_path.get() , dump_arg(var_struct_only, var_data_only, var_add_routines , var_add_events) ))
     dump_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
 
-    def deselect_when_selected(checkbutton , checkbutton2):
-        checkbutton.deselect()
-        checkbutton2.deselect()
+    var_struct_data = tk.IntVar()
+    var_struct_only = tk.IntVar()
+    var_data_only = tk.IntVar()
+    var_add_routines = tk.IntVar()
+    var_add_events = tk.IntVar()
 
-    struct_data = tk.Checkbutton(sql_dump_frame, text="Structure and data", command=lambda : deselect_when_selected(struct_only , data_only))
+    def dump_arg(var_struct_only, var_data_only, var_add_routines , var_add_events):
+        options = []
+        if var_struct_only.get() == 1:
+            options.append("--no-data") 
+        if var_data_only.get() == 1:
+            options.append("--no-create-info") 
+        if var_add_routines.get() == 1:
+            options.append("--routines")
+        if var_add_events.get() == 1:
+            options.append("--events")  
+
+        return options
+
+    def deselect_when_selected(*args):
+        for arg in args :
+            arg.deselect()
+
+    struct_data = tk.Checkbutton(sql_dump_frame, text="Structure and data" ,variable=var_struct_data, command=lambda : deselect_when_selected(struct_only , data_only))
     struct_data.grid(row=2 , column=0 , padx=100, pady=(10,10), sticky='w')
 
-    struct_only = tk.Checkbutton(sql_dump_frame , text="Structure only", command=lambda : deselect_when_selected(struct_data , data_only))
+    struct_only = tk.Checkbutton(sql_dump_frame , text="Structure only", variable=var_struct_only, command=lambda : deselect_when_selected(struct_data , data_only))
     struct_only.grid(row=2 , column=0 , padx=100, pady=(60,10), sticky='w')
 
-    data_only = tk.Checkbutton(sql_dump_frame, text="Data Only",command=lambda : deselect_when_selected(struct_data , struct_only))
+    data_only = tk.Checkbutton(sql_dump_frame, text="Data Only",variable=var_data_only,command=lambda : deselect_when_selected(struct_data , struct_only))
     data_only.grid(row=2 , column=0 , padx=100, pady=(130 ,35), sticky='w')
 
-    add_routines = tk.Checkbutton(sql_dump_frame, text="Copy Routines")
+    add_routines = tk.Checkbutton(sql_dump_frame,variable=var_add_routines, text="Copy Routines")
     add_routines.grid(row=2 , column=0 , padx=100, pady=(180,10), sticky='w')
 
-    add_events = tk.Checkbutton(sql_dump_frame, text="Copy Events")
+    add_events = tk.Checkbutton(sql_dump_frame,variable=var_add_events, text="Copy Events")
     add_events.grid(row=2 , column=0 , padx=100, pady=(220, 10), sticky='w')
 
     notebook.add(child=sql_dump_frame ,text='SQL Dump')
 
-    db_migration = ttk.Frame(notebook)
-    db_migration.pack(fill="both" , expand=True)
-    notebook.add(db_migration , text='Database migration')
+    db_import = ttk.Frame(notebook)
+    db_import.pack(fill="both" , expand=True)
+    notebook.add(db_import , text='Import')
 
     triggers_frame = ttk.Frame(notebook)
     triggers_frame.pack(fill="both" , expand=True)
