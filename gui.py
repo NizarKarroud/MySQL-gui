@@ -267,20 +267,39 @@ def tables_frame(menu_frame , db_name):
     exec_button.pack(pady=(10,30),padx=20 , side='right')
     notebook.add(sql_frame , text='SQL')
 
-    operations_tab = ttk.Frame(notebook)
-    operations_tab.pack(fill="both" , expand=True)
+    operations_frame = ttk.Frame(notebook)
+    operations_frame.pack(fill="both" , expand=True)
 
-    operations_frame = ttk.Frame(operations_tab , height=20)
-    operations_frame.pack(fill='x' ,expand=True)
+    create_table_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
+    create_table_frame.pack(fill='x', padx=10, pady=(30, 0) , ipady=70)
 
-    table_name_entry =ttk.Label(operations_frame , text='Create new Table Page' ,font=('Helvetica', 14))
-    table_name_entry.pack(side='left' ,padx=(100,20), pady=(10,600))
+    table_name_entry =ttk.Label(create_table_frame , text='Create new Table Page' ,font=('Helvetica', 14))
+    table_name_entry.pack(side='left' ,padx=100)
 
     # button to get to the table creation page
-    create_table_button =ttk.Button(operations_frame , text="Create new Table : " , command=lambda:table_create_page(table_frame))
-    create_table_button.pack(side='left' ,padx=100, pady=(10,600))
+    create_table_button =ttk.Button(create_table_frame , text="Create new Table " , command=lambda:table_create_page())
+    create_table_button.pack(side='left' ,padx=100)
 
-    notebook.add(operations_tab , text='Operations')
+    rename_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
+    rename_frame.pack(fill='x', padx=10, pady=(30, 0) , ipady=70)
+
+    new_name = tk.StringVar()
+    new_name_entry = ttk.Entry(rename_frame, textvariable=new_name, width=60)
+    new_name_entry.pack(side='left', padx=50)
+
+    rename_database_button = ttk.Button(rename_frame, text="Rename Database", width=50, command=lambda : mysql_con.rename_database(db_name , new_name.get()))
+    rename_database_button.pack(side='right', padx=50)
+
+    drop_database_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
+    drop_database_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=70)
+
+    drop_label = ttk.Label(drop_database_frame, text="Drop Database " , font=('Helvetica' , 12))
+    drop_label.pack(side='left',pady=10 , padx =30)
+
+    drop_database_button = ttk.Button(drop_database_frame, text="Drop ", width=40, command= lambda : mysql_con.drop_db(db_name))
+    drop_database_button.pack(side='left',pady=10 , padx =60)
+
+    notebook.add(operations_frame , text='Operations')
 
     search_frame = ttk.Frame(notebook)
     search_frame.pack(fill="both" , expand=True)
@@ -518,15 +537,17 @@ def tables_frame(menu_frame , db_name):
     # drop_db_button.pack(anchor="ne" ,padx=10 , pady=15)
 
 """ TABLE CREATION PAGE """
-def table_create_page(table_frame):
+def table_create_page():
 
-    table_frame.destroy()
+    window = tk.Toplevel(app)
+    window.geometry("800x600")
+    window.title("Create Table Window")
 
     # main frame
-    table_name_frame = ttk.Frame(app)
+    table_name_frame = ttk.Frame(window)
     table_name_frame.grid(column= 1  , row=0 , sticky = "nswe")
-    app.grid_rowconfigure(0, weight=1) 
-    app.grid_columnconfigure(1, weight=1) 
+    window.grid_rowconfigure(0, weight=1) 
+    window.grid_columnconfigure(1, weight=1) 
 
     # frame for the table name and add column button
     create_column_frame = ttk.Frame(table_name_frame)

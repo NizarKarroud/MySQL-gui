@@ -408,3 +408,19 @@ def delete_table(table):
         global_connection.commit()
     except Exception as err :
         return err
+
+
+def rename_database(db_name , new_name):
+    ...
+#for user priveleges , i need to work on it in the copied database and the user priveleges of databases   
+# mysql.user 
+# SELECT CONCAT('SHOW GRANTS FOR ''', user, '''@''', host, ''';') AS SQLStatement
+# FROM mysql.user
+# WHERE user != 'root' AND host != 'localhost';
+
+#for the delete table and empty table and delete row , delete column
+# ALTER TABLE child_table
+# ADD CONSTRAINT fk_parent_id
+# FOREIGN KEY (parent_id)
+# REFERENCES parent_table(parent_id)
+# ON DELETE CASCADE;
