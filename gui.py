@@ -702,7 +702,7 @@ def table_tabs(db_name , table):
     new_name_entry = ttk.Entry(rename_frame, textvariable=new_name, width=60)
     new_name_entry.pack(side='left', padx=50)
 
-    rename_table_button = ttk.Button(rename_frame, text="Rename Table", width=50, command=...)
+    rename_table_button = ttk.Button(rename_frame, text="Rename Table", width=50, command=lambda : mysql_con.rename_table(table , new_name.get()))
     rename_table_button.pack(side='right', padx=50)
 
     empty_table = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
@@ -711,7 +711,7 @@ def table_tabs(db_name , table):
     empty_label = ttk.Label(empty_table, text="Empty Table Records " , font=('Helvetica' , 12))
     empty_label.pack(side='left',pady=10 , padx =30 )
 
-    empty_table_button = ttk.Button(empty_table, text="Delete Records", width=40, command=...)
+    empty_table_button = ttk.Button(empty_table, text="Delete Records", width=40, command=lambda :mysql_con.empty_table(table))
     empty_table_button.pack(side='left',pady=10 , padx =60)
 
     drop_table_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
@@ -720,7 +720,7 @@ def table_tabs(db_name , table):
     drop_label = ttk.Label(drop_table_frame, text="Delete Table " , font=('Helvetica' , 12))
     drop_label.pack(side='left',pady=10 , padx =30)
 
-    drop_table_button = ttk.Button(drop_table_frame, text="Drop Table", width=40, command=...)
+    drop_table_button = ttk.Button(drop_table_frame, text="Drop Table", width=40, command=lambda: mysql_con.delete_table(table))
     drop_table_button.pack(side='left',pady=10 , padx =60)
 
     notebook.add(child=operations_frame ,text='Operations')

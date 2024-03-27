@@ -238,10 +238,7 @@ def export_database(db_name ,table_list, path, extension):
     else:
         return f"Parent path '{path}' does not exist."
 
-"""
-ALTER TABLE current_table_name
-RENAME TO new_table_name;
-"""
+
 def search_database(database, term_to_search ):
     cursor = global_connection.cursor()
     make_db_search_queries = f"""
@@ -386,4 +383,28 @@ def copy_db(db_name,*args):
         process.communicate(input=query)
 
     except Exception as err:
+        return err
+
+def rename_table(table , new_name):
+    try : 
+        cursor = global_connection.cursor()
+        cursor.execute(f"ALTER TABLE {table} RENAME TO {new_name};")
+        global_connection.commit()
+    except Exception as err :
+        return err
+    
+def empty_table(table):
+    try : 
+        cursor = global_connection.cursor()
+        cursor.execute(f"DELETE FROM {table};")
+        global_connection.commit()
+    except Exception as err :
+        return err
+
+def delete_table(table):
+    try : 
+        cursor = global_connection.cursor()
+        cursor.execute(f"DROP TABLE {table};")
+        global_connection.commit()
+    except Exception as err :
         return err
