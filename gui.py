@@ -30,7 +30,7 @@ def db_create(db_create_entry):
 
 """Returns the Tables in a specific Database """
 def show_db_tables(db_name):
-    connection = mysql_con.handle_login(hostname= mysql_con.hostname ,username= mysql_con.username,passw=mysql_con.passowrd , port=mysql_con.port , db=db_name) 
+    connection = mysql_con.handle_login(hostname= mysql_con.hostname ,username= mysql_con.username,passw=mysql_con.password , port=mysql_con.port , db=db_name) 
     if connection == True :
         return mysql_con.show_tables(db_name)
     else : 

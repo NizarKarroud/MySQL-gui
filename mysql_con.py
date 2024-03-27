@@ -8,7 +8,7 @@ import subprocess
 global_connection = None
 hostname = None
 username = None
-passowrd = None
+password = None
 port = None
 db = None
 
@@ -19,7 +19,7 @@ def handle_login(hostname,username , passw , port=3306,db=None):
             globals()["global_connection"]= connection
             globals()["hostname"] = hostname
             globals()["username"]= username
-            globals()["passowrd"]= passw
+            globals()["password"]= passw
             globals()["port" ]= port
             globals()["db"] = db   
             return True
@@ -34,7 +34,6 @@ def show_databases():
         con_cursor = global_connection.cursor() 
         con_cursor.execute("SHOW DATABASES")
         databases = con_cursor.fetchall()
-        con_cursor.reset()
         return databases
     except Exception as err :
         print(err)
@@ -43,16 +42,18 @@ def create_database(my_db):
     try :
         con_cursor = global_connection.cursor() 
         con_cursor.execute(f"CREATE DATABASE {my_db}")
+        global_connection.commit()
         return True
     except Exception as err :
         return err
-    
+    finally :
+        con_cursor.close()
+
 def show_tables(db_name):
     try :
         con_cursor = global_connection.cursor() 
         con_cursor.execute(f"SHOW TABLES FROM {db_name}")
         tables = con_cursor.fetchall()
-        con_cursor.reset()
         return tables
     except Exception as err:
         return err
@@ -307,7 +308,7 @@ def search_table(term_to_search , database , table):
 
 def sql_dump(path , *args):
         # Start building the command with basic arguments
-    command = ['mysqldump', '-h', hostname, '-u', username, f'-p{passowrd}']
+    command = ['mysqldump', '-h', hostname, '-u', username, f'-p{password}']
 
     # Add optional options based on the specified arguments
     for arg in args[0]:
@@ -352,12 +353,14 @@ def sql_import(path):
         return err
     
 def copy_db(db_name,*args):
+    # CREATE
     existent_databases = show_databases()
     if args[1] == 1 and not any(db_name in db_tuple for db_tuple in existent_databases):
         create_database(db_name)
 
-    command = ['mysqldump', '-h', hostname, '-u', username, f'-p{passowrd}']
+    command = ['mysqldump', '-h', hostname, '-u', username, f'-p{password}']
 
+    #append args
     for arg in args[0]:
         command.append(arg)
 
@@ -368,15 +371,16 @@ def copy_db(db_name,*args):
         mysql_process = subprocess.Popen(
             command,
             stdout=subprocess.PIPE,  # Capture stdout
-            stderr=subprocess.PIPE,  # Capture stderr for error handling
+            stderr=subprocess.PIPE,  # Capture stderr (for error handling after)
             universal_newlines=True
         )
 
-        # Wait for the process to finish and get the stdout and stderr output
+        # store the output in a variable
         query, error = mysql_process.communicate()
-        new_con = mysql.connector.connect(host=hostname , user=username , password=passowrd, port=port ,database=db_name, auth_plugin='mysql_native_password')
-        con_cursor = new_con.cursor()
-        con_cursor.execute(query , multi=True)
-        global_connection.commit()
+
+        cmd = f"mysql -h {hostname} -u {username} -p{password} {db_name}"
+        process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        process.communicate(input=query)
+
     except Exception as e:
         print(e)
