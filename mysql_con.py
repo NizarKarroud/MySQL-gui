@@ -409,9 +409,35 @@ def delete_table(table):
     except Exception as err :
         return err
 
-
 def rename_database(db_name , new_name):
     ...
+
+def insert_into_table(db_name,table , new_values , columns):
+    print(db_name,table , new_values , columns)
+    print(get_foreign_keys(db_name , table))
+
+def get_foreign_keys(db_name , table):
+    con_cursor = global_connection.cursor()
+    # to get the foreign keys in a table (the one to whom the record belongs) 
+    con_cursor.execute(f"SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND TABLE_NAME = '{table}';") 
+    foreign_keys_list = con_cursor.fetchall()
+    
+    tables_to_check = {}
+        # to get the the tables and the columns where the foreign keys are primary
+    for foreign_key in foreign_keys_list :
+        con_cursor.execute(f"SELECT REFERENCED_TABLE_NAME , REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ('{foreign_key[0]}');")
+        tab_col_couple = con_cursor.fetchall()
+        tables_to_check[tab_col_couple[0][0]] = tab_col_couple[0][1]
+
+    return tables_to_check
+
+
+
+
+
+
+
+
 #for user priveleges , i need to work on it in the copied database and the user priveleges of databases   
 # mysql.user 
 # SELECT CONCAT('SHOW GRANTS FOR ''', user, '''@''', host, ''';') AS SQLStatement
@@ -424,3 +450,4 @@ def rename_database(db_name , new_name):
 # FOREIGN KEY (parent_id)
 # REFERENCES parent_table(parent_id)
 # ON DELETE CASCADE;
+    

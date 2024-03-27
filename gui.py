@@ -708,8 +708,56 @@ def table_tabs(db_name , table):
          
     notebook.add(child=search_frame ,text='Search')
 
+
     insert_frame = ttk.Frame(notebook)
     insert_frame.pack(expand=True ,fill='both')
+
+    # Add a canvas to make the frame scrollable
+    canvas = tk.Canvas(insert_frame)
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    # Add a scrollbar
+    scrollbar = ttk.Scrollbar(insert_frame, orient=tk.VERTICAL, command=canvas.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    canvas.configure(yscrollcommand=scrollbar.set)
+
+    inner_frame = ttk.Frame(canvas)
+    canvas.create_window((0, 0), window=inner_frame, anchor=tk.NW)
+
+    entries = []
+    for header in columns:
+        label = ttk.Label(inner_frame, text=header)
+        label.pack(padx=300, pady=5)
+
+        entry_var = tk.StringVar()
+        entry = ttk.Entry(inner_frame, textvariable=entry_var)
+        entry.pack(padx=300, pady=5 )
+
+        entries.append(entry_var)
+
+    # Function to update canvas scrolling region
+    def _configure_scroll_region(event):
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+    inner_frame.bind("<Configure>", _configure_scroll_region)
+
+    # Add a button to submit the changes
+    submit_button = ttk.Button(inner_frame, text="Insert", command=lambda : get_inserted_values(db_name , table))
+    submit_button.pack(padx=10, pady=20)
+
+    # Bind the canvas scrolling to mousewheel events
+    def _on_mousewheel(event):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+    # Function to get the values from the entry widgets
+    def get_inserted_values(db_name  ,table):
+        new_values = [entry.get() for entry in entries]
+      
+        mysql_con.insert_into_table(db_name,table , new_values , columns)
+
+
     notebook.add(child=insert_frame ,text='Insert')
 
     operations_frame = ttk.Frame(notebook)
