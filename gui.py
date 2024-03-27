@@ -691,25 +691,99 @@ def table_tabs(db_name , table):
     insert_frame.pack(expand=True ,fill='both')
     notebook.add(child=insert_frame ,text='Insert')
 
-    drop_table_frame = ttk.Frame(notebook)
-    drop_table_frame.pack(expand=True ,fill='both')
-    notebook.add(child=drop_table_frame ,text='Drop Table')
-    
-    rename_table_frame = ttk.Frame(notebook)
-    rename_table_frame.pack(expand=True ,fill='both')
-    notebook.add(child=rename_table_frame ,text='Rename Table')
+    operations_frame = ttk.Frame(notebook)
+    operations_frame.pack(expand=True ,fill='both')
 
-    empty_table_frame = ttk.Frame(notebook)
-    empty_table_frame.pack(expand=True ,fill='both')
-    notebook.add(child=empty_table_frame ,text='Empty Table')
+
+    rename_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
+    rename_frame.pack(fill='x', padx=10, pady=(30, 0) , ipady=70)
+
+    new_name = tk.StringVar()
+    new_name_entry = ttk.Entry(rename_frame, textvariable=new_name, width=60)
+    new_name_entry.pack(side='left', padx=50)
+
+    rename_table_button = ttk.Button(rename_frame, text="Rename Table", width=50, command=...)
+    rename_table_button.pack(side='right', padx=50)
+
+    empty_table = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
+    empty_table.pack(fill='x', padx=10, pady=(30, 0) , ipady=70)
+
+    empty_label = ttk.Label(empty_table, text="Empty Table Records " , font=('Helvetica' , 12))
+    empty_label.pack(side='left',pady=10 , padx =30 )
+
+    empty_table_button = ttk.Button(empty_table, text="Delete Records", width=40, command=...)
+    empty_table_button.pack(side='left',pady=10 , padx =60)
+
+    drop_table_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
+    drop_table_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=70)
+
+    drop_label = ttk.Label(drop_table_frame, text="Delete Table " , font=('Helvetica' , 12))
+    drop_label.pack(side='left',pady=10 , padx =30)
+
+    drop_table_button = ttk.Button(drop_table_frame, text="Drop Table", width=40, command=...)
+    drop_table_button.pack(side='left',pady=10 , padx =60)
+
+    notebook.add(child=operations_frame ,text='Operations')
+
 
     priv_table_frame = ttk.Frame(notebook)
     priv_table_frame.pack(expand=True ,fill='both')
     notebook.add(child=priv_table_frame ,text='Priveleges')
 
-    
+
     sql_dump_frame = ttk.Frame(notebook)
     sql_dump_frame.pack(expand=True ,fill='both')
+
+    sql_dump_title = ttk.Label(sql_dump_frame , text='Dump Table' ,  font=("Helvetica",20))
+    sql_dump_title.grid(row=0 , column=0 , padx=240 , pady=30,sticky='w')
+
+    dump_path_label = ttk.Label(sql_dump_frame , text='Path : ' ,  font=("Helvetica",14))
+    dump_path_label.grid(row=1, column=0 , padx=100 , pady=60 ,sticky='w')
+
+    dump_path= tk.StringVar()
+    dump_path_entry = ttk.Entry(sql_dump_frame , textvariable=dump_path , width=40)
+    dump_path_entry.grid(row=1, column=0 , padx=220 , pady=60,sticky='w')
+
+    dump_button = ttk.Button(sql_dump_frame , text='dump' ,command=lambda : mysql_con.sql_dump(dump_path.get() ,table, dump_arg(var_struct_only, var_data_only, var_add_routines , var_add_events) ))
+    dump_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
+
+    var_struct_data = tk.IntVar()
+    var_struct_only = tk.IntVar()
+    var_data_only = tk.IntVar()
+    var_add_routines = tk.IntVar()
+    var_add_events = tk.IntVar()
+
+    def dump_arg(var_struct_only, var_data_only, var_add_routines , var_add_events):
+        options = []
+        if var_struct_only.get() == 1:
+            options.append("--no-data") 
+        if var_data_only.get() == 1:
+            options.append("--no-create-info") 
+        if var_add_routines.get() == 1:
+            options.append("--routines")
+        if var_add_events.get() == 1:
+            options.append("--events")  
+
+        return options
+
+    def deselect_when_selected(*args):
+        for arg in args :
+            arg.deselect()
+
+    struct_data = tk.Checkbutton(sql_dump_frame, text="Structure and data" ,variable=var_struct_data, command=lambda : deselect_when_selected(struct_only , data_only))
+    struct_data.grid(row=2 , column=0 , padx=100, pady=(10,10), sticky='w')
+
+    struct_only = tk.Checkbutton(sql_dump_frame , text="Structure only", variable=var_struct_only, command=lambda : deselect_when_selected(struct_data , data_only))
+    struct_only.grid(row=2 , column=0 , padx=100, pady=(60,10), sticky='w')
+
+    data_only = tk.Checkbutton(sql_dump_frame, text="Data Only",variable=var_data_only,command=lambda : deselect_when_selected(struct_data , struct_only))
+    data_only.grid(row=2 , column=0 , padx=100, pady=(130 ,35), sticky='w')
+
+    add_routines = tk.Checkbutton(sql_dump_frame,variable=var_add_routines, text="Add Routines")
+    add_routines.grid(row=2 , column=0 , padx=100, pady=(180,10), sticky='w')
+
+    add_events = tk.Checkbutton(sql_dump_frame,variable=var_add_events, text="Add Events")
+    add_events.grid(row=2 , column=0 , padx=100, pady=(220, 10), sticky='w')
     notebook.add(child=sql_dump_frame ,text='SQL Dump')
 
     data_vis_frame = ttk.Frame(notebook)

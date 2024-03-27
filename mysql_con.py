@@ -306,7 +306,7 @@ def search_table(term_to_search , database , table):
 
     return(header , rows)
 
-def sql_dump(path , *args):
+def sql_dump(path , table=None, *args):
         # Start building the command with basic arguments
     command = ['mysqldump', '-h', hostname, '-u', username, f'-p{password}']
 
@@ -316,6 +316,9 @@ def sql_dump(path , *args):
 
     # Append the database name at the end
     command.append(db)
+
+    if table :
+        command.append(table)
 
     try:
         # Open the output file in write mode
@@ -382,5 +385,5 @@ def copy_db(db_name,*args):
         process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         process.communicate(input=query)
 
-    except Exception as e:
-        print(e)
+    except Exception as err:
+        return err
