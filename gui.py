@@ -21,9 +21,10 @@ def login_success(frame , hostname  ,port ,username , password ) :
         messagebox.showerror(title='Error' , message=connection )
 
 """To create a Database"""
-def db_create(db_create_entry):
+def db_create(menu_frame , db_create_entry):
     db_creation = mysql_con.create_database(db_create_entry)
     if db_creation == True :
+        menu_frame.destroy()
         database_menu()
     else :
         messagebox.showerror(title='Error' , message=db_creation )
@@ -213,14 +214,14 @@ def database_menu():
     db_create_entry = ttk.Entry(menu_frame, textvariable=new_db )
     db_create_entry.pack(pady=(60,0)) 
 
-    create_database_button = ttk.Button(menu_frame,text="Create a new Database" ,command=lambda:db_create(new_db.get()))
+    create_database_button = ttk.Button(menu_frame,text="Create a new Database" ,command=lambda:db_create(menu_frame,new_db.get()))
     create_database_button.pack(side="top", pady=(10,40))
 
     databases = mysql_con.show_databases()
-    databases_buttons = [ttk.Button(menu_frame,text=database , command=lambda db=database: tables_frame(db[0])).pack(fill='both',side="top", pady=10) for database in databases]
+    databases_buttons = [ttk.Button(menu_frame,text=database , command=lambda db=database: tables_frame(menu_frame,db[0])).pack(fill='both',side="top", pady=10) for database in databases]
 
 """ Frame that contains the tabs for database Operations and Tables """
-def tables_frame(db_name):
+def tables_frame(menu_frame , db_name):
     for frame in frame_to_destroy :
         frame.destroy()
 
@@ -349,8 +350,14 @@ def tables_frame(db_name):
     db_copy_entry = ttk.Entry(copy_db , textvariable=db_copy_to , width=40)
     db_copy_entry.grid(row=1, column=0 , padx=220 , pady=60,sticky='w')
 
-    copy_button = ttk.Button(copy_db , text='copy' ,command=lambda :mysql_con.copy_db(db_copy_to.get() , get_args(cp_struct.get() ,cp_data.get()) ,create_before.get()))
+    def copy_function():
+        mysql_con.copy_db(db_copy_to.get() , get_args(cp_struct.get() ,cp_data.get()) ,create_before.get())
+        menu_frame.destroy()
+        database_menu()
+
+    copy_button = ttk.Button(copy_db , text='copy' ,command= lambda : copy_function())
     copy_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
+
 
     cp_struct = tk.IntVar()
     cp_data = tk.IntVar()
@@ -486,7 +493,7 @@ def tables_frame(db_name):
     db_import = ttk.Frame(notebook )
     db_import.pack(fill="both" , expand=True )
 
-    sql_import = ttk.Label(db_import , text='Import Database' ,  font=("Helvetica",30))
+    sql_import = ttk.Label(db_import , text='Import Into Database' ,  font=("Helvetica",30))
     sql_import.grid(row=0 , column=0 , padx=230 , pady=30,sticky='w')
 
     sql_import_label = ttk.Label(db_import , text='Path : ' ,  font=("Helvetica",14))
