@@ -410,8 +410,25 @@ def delete_table(table):
 
 """Rename Database"""
 def rename_database(db_name , new_name):
-    ...
+    try :
+        create_database(new_name)
+        command = ['mysqldump', '-h', hostname, '-u', username, f'-p{password}' , db_name]
+        mysql_process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,  # Capture stdout
+            stderr=subprocess.PIPE,  # Capture stderr (for error handling after)
+            universal_newlines=True
+        )
 
+        # store the output in a variable
+        query, error = mysql_process.communicate()
+
+        cmd = f"mysql -h {hostname} -u {username} -p{password} {new_name}"
+        process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        process.communicate(input=query)
+        drop_db(db_name)
+    except Exception as err:
+        return err
 """Insert row into table"""
 def insert_into_table(db_name,table , new_values , columns):
     try :
