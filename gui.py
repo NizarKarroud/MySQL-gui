@@ -296,6 +296,7 @@ def tables_frame(menu_frame , db_name):
     drop_label = ttk.Label(drop_database_frame, text="Drop Database " , font=('Helvetica' , 12))
     drop_label.pack(side='left',pady=10 , padx =30)
 
+    # i need to reset the menu frame
     drop_database_button = ttk.Button(drop_database_frame, text="Drop ", width=40, command= lambda : mysql_con.drop_db(db_name))
     drop_database_button.pack(side='left',pady=10 , padx =60)
 
@@ -725,15 +726,21 @@ def table_tabs(db_name , table):
     canvas.create_window((0, 0), window=inner_frame, anchor=tk.NW)
 
     entries = []
+    columns_fk = [item for item in columns for tuple_item in mysql_con.fk_in_table(db_name, table) if item in tuple_item]
     for header in columns:
         label = ttk.Label(inner_frame, text=header)
         label.pack(padx=300, pady=5)
+        if header not in columns_fk :
+            entry_var = tk.StringVar()
+            entry = ttk.Entry(inner_frame, textvariable=entry_var)
+            entry.pack(padx=300, pady=5 )
+            entries.append(entry_var)
 
-        entry_var = tk.StringVar()
-        entry = ttk.Entry(inner_frame, textvariable=entry_var)
-        entry.pack(padx=300, pady=5 )
-
-        entries.append(entry_var)
+        else :
+            choice = tk.StringVar()
+            foreign_key = ttk.Combobox(inner_frame , textvariable=choice , values=mysql_con.get_foreign_keys_values(db_name , table) , state='readonly')
+            foreign_key.pack(padx=300, pady=5 )
+            entries.append(choice)
 
     # Function to update canvas scrolling region
     def _configure_scroll_region(event):
@@ -754,7 +761,7 @@ def table_tabs(db_name , table):
     # Function to get the values from the entry widgets
     def get_inserted_values(db_name  ,table):
         new_values = [entry.get() for entry in entries]
-      
+        
         mysql_con.insert_into_table(db_name,table , new_values , columns)
 
 

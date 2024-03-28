@@ -413,30 +413,43 @@ def rename_database(db_name , new_name):
     ...
 
 def insert_into_table(db_name,table , new_values , columns):
-    print(db_name,table , new_values , columns)
-    print(get_foreign_keys(db_name , table))
+    try :
+        new_values = [f"'{i}'" if  i is not None else 'NULL' for i in new_values]
+        con_cursor = global_connection.cursor()
+        insert_column= ', '.join([f"{column}" for column in columns])
+        insert_values= ', '.join([f"{value}" for value in new_values])
 
-def get_foreign_keys(db_name , table):
+        insert_query = f"INSERT INTO {table} ({insert_column}) VALUES ({insert_values});"
+        print(insert_query)
+        con_cursor.execute(insert_query)
+        global_connection.commit()
+    except Exception as err :
+        print(err)
+def fk_in_table(db_name , table):
     con_cursor = global_connection.cursor()
     # to get the foreign keys in a table (the one to whom the record belongs) 
     con_cursor.execute(f"SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND TABLE_NAME = '{table}';") 
     foreign_keys_list = con_cursor.fetchall()
-    
+    return foreign_keys_list
+
+def get_foreign_keys_values(db_name , table):
+    con_cursor = global_connection.cursor()
+    foreign_keys_list = fk_in_table(db_name , table)
+
+    for table , column in get_foreign_keys(foreign_keys_list ,db_name).items():
+        con_cursor.execute(f"SELECT {column} FROM {table};")
+        results = con_cursor.fetchall()
+    if results : return results
+
+def get_foreign_keys(foreign_keys_list , db_name):
+    con_cursor = global_connection.cursor()
     tables_to_check = {}
-        # to get the the tables and the columns where the foreign keys are primary
+    # to get the the tables and the columns where the foreign keys are primary
     for foreign_key in foreign_keys_list :
         con_cursor.execute(f"SELECT REFERENCED_TABLE_NAME , REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ('{foreign_key[0]}');")
         tab_col_couple = con_cursor.fetchall()
         tables_to_check[tab_col_couple[0][0]] = tab_col_couple[0][1]
-
     return tables_to_check
-
-
-
-
-
-
-
 
 #for user priveleges , i need to work on it in the copied database and the user priveleges of databases   
 # mysql.user 
