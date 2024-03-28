@@ -473,13 +473,25 @@ def get_foreign_keys(foreign_keys_list , db_name):
         tables_to_check[tab_col_couple[0][0]] = tab_col_couple[0][1]
     return tables_to_check
 
-#for user priveleges , i need to work on it in the copied database and the user priveleges of databases   
-# mysql.user 
-# SELECT CONCAT('SHOW GRANTS FOR ''', user, '''@''', host, ''';') AS SQLStatement
-# FROM mysql.user
-# WHERE user != 'root' AND host != 'localhost';
 
-#for the delete table and empty table and delete row , delete column
+def trigger(trigger_name,time,event,table_name,logic):
+    try :
+        trigger_syntax = f"""CREATE TRIGGER {trigger_name}
+        {time} {event}
+        ON {table_name}
+        FOR EACH ROW
+        BEGIN
+        {logic}
+        END;
+        """
+        con_cursor = global_connection.cursor()
+        con_cursor.execute(trigger_syntax)
+        global_connection.commit()
+
+    except Exception as err :   
+        return err
+
+#for  and delete row , delete column
 # ALTER TABLE child_table
 # ADD CONSTRAINT fk_parent_id
 # FOREIGN KEY (parent_id)

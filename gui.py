@@ -528,8 +528,15 @@ def tables_frame(menu_frame , db_name):
 
     notebook.add(db_import , text='Import')
 
-    triggers_frame = ttk.Frame(notebook)
-    triggers_frame.pack(fill="both" , expand=True)
+    triggers_frame = ttk.Frame(notebook ,borderwidth=10, relief="solid" )
+    triggers_frame.pack(fill="both" , expand=True, padx=30 , pady=30)
+
+    trigger_name_label = ttk.Label(triggers_frame , text='Trigger name : ' , font=("Helvetica",14))
+    trigger_name_label.pack(side='left' , padx=30 , pady=(10,500))
+
+    trigger_name = tk.StringVar()
+    trigger_name_entry = ttk.Entry(triggers_frame , textvariable=trigger_name , width=40)
+    trigger_name_entry.pack(side='left' , padx=100 , pady=(10,500))
     notebook.add(triggers_frame , text='Triggers')
     
 
