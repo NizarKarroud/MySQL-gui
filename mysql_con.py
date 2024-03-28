@@ -117,12 +117,7 @@ def alter_table(db_name , table, values , columns,key_val_couple):
         con_cursor.execute(f"SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND TABLE_NAME = '{table}';") 
         foreign_keys_list = con_cursor.fetchall()
 
-        tables_to_check = {}
-        # to get the the tables and the columns where the foreign keys are primary
-        for foreign_key in foreign_keys_list :
-            con_cursor.execute(f"SELECT REFERENCED_TABLE_NAME , REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ('{foreign_key[0]}');")
-            tab_col_couple = con_cursor.fetchall()
-            tables_to_check[tab_col_couple[0][0]] = tab_col_couple[0][1]
+        tables_to_check = get_foreign_keys(foreign_keys_list,db_name)
 
         
         if tables_to_check :
@@ -240,34 +235,38 @@ def export_database(db_name ,table_list, path, extension):
 
 
 def search_database(database, term_to_search ):
-    cursor = global_connection.cursor()
-    make_db_search_queries = f"""
-    SELECT CONCAT(
-        'SELECT ''', TABLE_NAME, ''' AS table_name, ''', COLUMN_NAME, ''' AS value FROM ',
-        TABLE_NAME, ' WHERE ', COLUMN_NAME, ' LIKE ''{term_to_search}'''
-    )
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = '{database}';
+    try : 
+        cursor = global_connection.cursor()
+        make_db_search_queries = f"""
+        SELECT CONCAT(
+            'SELECT ''', TABLE_NAME, ''' AS table_name, ''', COLUMN_NAME, ''' AS value FROM ',
+            TABLE_NAME, ' WHERE ', '`', COLUMN_NAME, '`', ' LIKE ''{term_to_search}'''
+        )
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = '{database}';
 
-    """
-    cursor.execute(make_db_search_queries)
+        """
+        cursor.execute(make_db_search_queries)
 
-    results = cursor.fetchall() 
+        results = cursor.fetchall() 
 
-    final_result = []
-    item_counter = Counter()
+        final_result = []
+        item_counter = Counter()
 
-    for row in results:
-        # Extract the SELECT statement from the row
-        select_statement = row[0].rstrip(" \" ") + ";"
-        # Execute the SELECT statement
-        cursor.execute(select_statement)
-        # Fetch and print the results of the SELECT statement
-        select_results = cursor.fetchall()
+        for row in results:
+            # Extract the SELECT statement from the row
+            select_statement = row[0].strip(" \" ") + ";"
+            print(select_statement)
+            # Execute the SELECT statement
+            cursor.execute(select_statement)
+            # Fetch and print the results of the SELECT statement
+            select_results = cursor.fetchall()
 
-        item_counter.update(select_results)
+            item_counter.update(select_results)
 
-    return list(item_counter.items())
+        return list(item_counter.items())
+    except Exception as err :
+        print(err)
 
 def search_table(term_to_search , database , table):
     rows = []
@@ -409,9 +408,11 @@ def delete_table(table):
     except Exception as err :
         return err
 
+"""Rename Database"""
 def rename_database(db_name , new_name):
     ...
 
+"""Insert row into table"""
 def insert_into_table(db_name,table , new_values , columns):
     try :
         new_values = [f"'{i}'" if  i is not None else 'NULL' for i in new_values]
@@ -425,6 +426,8 @@ def insert_into_table(db_name,table , new_values , columns):
         global_connection.commit()
     except Exception as err :
         print(err)
+
+"""Get the Foreign keys in a table (the columns)"""
 def fk_in_table(db_name , table):
     con_cursor = global_connection.cursor()
     # to get the foreign keys in a table (the one to whom the record belongs) 
@@ -432,6 +435,7 @@ def fk_in_table(db_name , table):
     foreign_keys_list = con_cursor.fetchall()
     return foreign_keys_list
 
+"""Get the Values of the foreign key"""
 def get_foreign_keys_values(db_name , table):
     con_cursor = global_connection.cursor()
     foreign_keys_list = fk_in_table(db_name , table)
@@ -441,6 +445,7 @@ def get_foreign_keys_values(db_name , table):
         results = con_cursor.fetchall()
     if results : return results
 
+"""To get the tables and columns where a key is used as foreign key"""
 def get_foreign_keys(foreign_keys_list , db_name):
     con_cursor = global_connection.cursor()
     tables_to_check = {}

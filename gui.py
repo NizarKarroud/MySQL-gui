@@ -801,7 +801,6 @@ def table_tabs(db_name , table):
 
     notebook.add(child=operations_frame ,text='Operations')
 
-
     sql_dump_frame = ttk.Frame(notebook)
     sql_dump_frame.pack(expand=True ,fill='both')
 
