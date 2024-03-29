@@ -476,14 +476,17 @@ def get_foreign_keys(foreign_keys_list , db_name):
 
 def trigger(trigger_name,time,event,table_name,logic):
     try :
-        trigger_syntax = f"""CREATE TRIGGER {trigger_name}
+        trigger_syntax = f"""DELIMITER $$
+        CREATE TRIGGER {trigger_name}
         {time} {event}
         ON {table_name}
         FOR EACH ROW
         BEGIN
         {logic}
-        END;
+        END$$
+        DELIMITER ;
         """
+
         con_cursor = global_connection.cursor()
         con_cursor.execute(trigger_syntax)
         global_connection.commit()

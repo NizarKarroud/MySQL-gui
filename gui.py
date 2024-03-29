@@ -297,7 +297,7 @@ def tables_frame(menu_frame , db_name):
     drop_label.pack(side='left',pady=10 , padx =30)
 
     # i need to reset the menu frame
-    drop_database_button = ttk.Button(drop_database_frame, text="Drop ", width=40, command= lambda : mysql_con.drop_db(db_name))
+    drop_database_button = ttk.Button(drop_database_frame, text="Drop ", width=40, command= lambda : drop_db(menu_frame , db_name))
     drop_database_button.pack(side='left',pady=10 , padx =60)
 
     notebook.add(operations_frame , text='Operations')
@@ -531,18 +531,45 @@ def tables_frame(menu_frame , db_name):
     triggers_frame = ttk.Frame(notebook ,borderwidth=10, relief="solid" )
     triggers_frame.pack(fill="both" , expand=True, padx=30 , pady=30)
 
-    trigger_name_label = ttk.Label(triggers_frame , text='Trigger name : ' , font=("Helvetica",14))
-    trigger_name_label.pack(side='left' , padx=30 , pady=(10,500))
+    trigger_name_label = ttk.Label(triggers_frame, text='Trigger name :' , font=("Helvetica",14))
+    trigger_name_label.grid(row=0, column=0, sticky='w' ,pady=20, padx=(100,20))
 
     trigger_name = tk.StringVar()
-    trigger_name_entry = ttk.Entry(triggers_frame , textvariable=trigger_name , width=40)
-    trigger_name_entry.pack(side='left' , padx=100 , pady=(10,500))
+    trigger_name_entry = ttk.Entry(triggers_frame ,textvariable=trigger_name, width=35)
+    trigger_name_entry.grid(row=0, column=1, padx=(20,100), pady=20)
+
+    table_label = ttk.Label(triggers_frame, text='Table :' , font=("Helvetica",14))
+    table_label.grid(row=1, column=0, sticky='w', pady=20, padx=(100,20))
+    
+    table_choice = tk.StringVar()
+    trigger_tables = ttk.Combobox(triggers_frame, textvariable=table_choice, values=[table[0] for table in tables], state='readonly' ,width=27)
+    trigger_tables.grid(row=1, column=1, padx=10, pady=5)
+
+    time_label = ttk.Label(triggers_frame, text='Time :' , font=("Helvetica",14))
+    time_label.grid(row=2, column=0, sticky='w' ,pady=20, padx=(100,20))
+
+    time = tk.StringVar()
+    time_choice = ttk.Combobox(triggers_frame, textvariable=time, values=['BEFORE', 'AFTER'], state='readonly', width=27)
+    time_choice.grid(row=2, column=1, padx=10, pady=5)
+
+    event_label = ttk.Label(triggers_frame, text='Event :' , font=("Helvetica",14))
+    event_label.grid(row=3, column=0, sticky='w',pady=20, padx=(100,20))
+    
+    event = tk.StringVar()
+    event_choice = ttk.Combobox(triggers_frame, textvariable=event, values=['INSERT', 'UPDATE', 'DELETE'], state='readonly', width=27)
+    event_choice.grid(row=3, column=1, padx=10, pady=5)
+
+    definition_label = ttk.Label(triggers_frame, text='Definition :', font=("Helvetica",14))
+    definition_label.grid(row=4, column=0, sticky='nw' , pady=60 , padx=(100,20))
+
+    definition_text = tk.Text(triggers_frame, height=20, width=60)
+    definition_text.grid(row=4, column=1, padx=10, pady=10, sticky='nw')
+
+    create_trigger = ttk.Button(triggers_frame , text='Create' , command= lambda :mysql_con.trigger(trigger_name.get() ,time.get() , event.get() , table_choice.get() , definition_text.get(1.0, "end-1c")))
+    create_trigger.grid(row=5 , column=3 , sticky='se' , padx=10 , pady=20)
+
     notebook.add(triggers_frame , text='Triggers')
     
-
-    # # Button to drop the database
-    # drop_db_button = ttk.Button(table_frame , text="Drop database" , command=lambda: drop_db(table_frame,db_name))
-    # drop_db_button.pack(anchor="ne" ,padx=10 , pady=15)
 
 """ TABLE CREATION PAGE """
 def table_create_page():
