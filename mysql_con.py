@@ -11,6 +11,7 @@ username = None
 password = None
 port = None
 db = None
+cursor = None
 
 def handle_login(hostname,username , passw , port=3306,db=None):
     try : 
@@ -21,7 +22,8 @@ def handle_login(hostname,username , passw , port=3306,db=None):
             globals()["username"]= username
             globals()["password"]= passw
             globals()["port" ]= port
-            globals()["db"] = db   
+            globals()["db"] = db  
+            globals()["cursor"] = connection.cursor()
             return True
         else :
             return False
@@ -31,37 +33,32 @@ def handle_login(hostname,username , passw , port=3306,db=None):
 
 def show_databases():
     try :
-        con_cursor = global_connection.cursor() 
-        con_cursor.execute("SHOW DATABASES")
-        databases = con_cursor.fetchall()
+        cursor.execute("SHOW DATABASES")
+        databases = cursor.fetchall()
         return databases
     except Exception as err :
         print(err)
 
 def create_database(my_db):
     try :
-        con_cursor = global_connection.cursor() 
-        con_cursor.execute(f"CREATE DATABASE {my_db}")
+        cursor.execute(f"CREATE DATABASE {my_db}")
         global_connection.commit()
         return True
     except Exception as err :
         return err
-    finally :
-        con_cursor.close()
+
 
 def show_tables(db_name):
     try :
-        con_cursor = global_connection.cursor() 
-        con_cursor.execute(f"SHOW TABLES FROM {db_name}")
-        tables = con_cursor.fetchall()
+        cursor.execute(f"SHOW TABLES FROM {db_name}")
+        tables = cursor.fetchall()
         return tables
     except Exception as err:
         return err
 
 def drop_db(db_name):
     try :
-        con_cursor = global_connection.cursor()
-        con_cursor.execute(f"DROP DATABASE {db_name}")
+        cursor.execute(f"DROP DATABASE {db_name}")
         return True
     except Exception as err:
         return err
@@ -69,29 +66,27 @@ def drop_db(db_name):
 def show_search_records(table_col_couple , term):
     try :
         table , column = table_col_couple  
-        con_cursor = global_connection.cursor()
-        con_cursor.execute(f"SELECT * FROM {table} WHERE {column} = '{term}';")
-        rows = con_cursor.fetchall()
-        columns = [i[0] for i in con_cursor.description]
-        return columns,rows,get_prim_keys(con_cursor,table)
+        cursor.execute(f"SELECT * FROM {table} WHERE {column} = '{term}';")
+        rows = cursor.fetchall()
+        columns = [i[0] for i in cursor.description]
+        return columns,rows,get_prim_keys(cursor,table)
     except Exception as err :
         print(err) 
         
 def show_table_records(table):
     try :
-        con_cursor = global_connection.cursor()
-        con_cursor.execute(f"SELECT * FROM {table}")
-        rows = con_cursor.fetchall()
-        columns = [i[0] for i in con_cursor.description]
-        return columns,rows,get_prim_keys(con_cursor,table)
+        cursor.execute(f"SELECT * FROM {table}")
+        rows = cursor.fetchall()
+        columns = [i[0] for i in cursor.description]
+        return columns,rows,get_prim_keys(cursor,table)
     except Exception as err:
         print(err)
         return None
 
-def get_prim_keys(con_cursor,table):
+def get_prim_keys(cursor,table):
     try :
-        con_cursor.execute(f"SHOW KEYS FROM {table} WHERE Key_name = 'PRIMARY';")
-        rows = con_cursor.fetchall()
+        cursor.execute(f"SHOW KEYS FROM {table} WHERE Key_name = 'PRIMARY';")
+        rows = cursor.fetchall()
         
         return [row[4] for i,row in enumerate(rows)]
 
@@ -104,18 +99,17 @@ def alter_table(db_name , table, values , columns,key_val_couple):
     try :
 
         values = [f"'{i}'" if  i is not None else 'NULL' for i in values]
-        con_cursor = global_connection.cursor()
 
-        con_cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
         
         # to get where the primary key of a table is a foreign key ( the table name , and column name) so that i can implement some sort of UPDATE ON CASCADE
         ref_clause = ", ".join([f"'{column[0]}'" for column in key_val_couple])
-        con_cursor.execute(f"SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ({ref_clause});")
-        foreign_relations = con_cursor.fetchall()
+        cursor.execute(f"SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ({ref_clause});")
+        foreign_relations = cursor.fetchall()
 
         # to get the foreign keys in a table (the one to whom the record belongs) 
-        con_cursor.execute(f"SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND TABLE_NAME = '{table}';") 
-        foreign_keys_list = con_cursor.fetchall()
+        cursor.execute(f"SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND TABLE_NAME = '{table}';") 
+        foreign_keys_list = cursor.fetchall()
 
         tables_to_check = get_foreign_keys(foreign_keys_list,db_name)
 
@@ -124,8 +118,8 @@ def alter_table(db_name , table, values , columns,key_val_couple):
         #check if the updated value of the the foreign keys exist in the records of their tables
             for foreign_table , column in tables_to_check.items():
                 value = dict(zip(columns, values))[column]
-                con_cursor.execute(f"SELECT COUNT(*) FROM {foreign_table} WHERE {column} = {value};")
-                result = con_cursor.fetchall()[0]
+                cursor.execute(f"SELECT COUNT(*) FROM {foreign_table} WHERE {column} = {value};")
+                result = cursor.fetchall()[0]
                 print(result)
                 if result[0] > 0  :
                     set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
@@ -134,15 +128,15 @@ def alter_table(db_name , table, values , columns,key_val_couple):
 
                     query_update = f"UPDATE {table} SET {set_clause} WHERE {where_clause};"
                     print(query_update) 
-                    con_cursor.execute(query_update)
+                    cursor.execute(query_update)
 
                     set_clause_keys = {key : value for key , value in zip(columns , values) if any(key == key_couple[0] for key_couple in key_val_couple)}
                     ref_set_clause = ','.join([f"{column} = {value}" for column , value in set_clause_keys.items()])
                     for relation in foreign_relations :
                         print(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
-                        con_cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
+                        cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
 
-                    con_cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+                    cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
 
                     global_connection.commit()
         else : 
@@ -152,16 +146,16 @@ def alter_table(db_name , table, values , columns,key_val_couple):
 
             query_update = f"UPDATE {table} SET {set_clause} WHERE {where_clause};"
             print(query_update) 
-            con_cursor.execute(query_update)
+            cursor.execute(query_update)
 
 
             set_clause_keys = {key : value for key , value in zip(columns , values) if any(key == key_couple[0] for key_couple in key_val_couple)}
             ref_set_clause = ','.join([f"{column} = {value}" for column , value in set_clause_keys.items()])
             for relation in foreign_relations :
                 print(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
-                con_cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
+                cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
 
-            con_cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
 
             global_connection.commit()     
     except Exception as err:
@@ -171,15 +165,14 @@ def alter_table(db_name , table, values , columns,key_val_couple):
         
 def exec_query(query):
     try:
-        con_cursor = global_connection.cursor()
-        con_cursor.execute(query)
+        cursor.execute(query)
         
         # Check if the query is a SELECT query or not
-        is_data_query = con_cursor.description is not None
+        is_data_query = cursor.description is not None
         
         if is_data_query:
-            result = con_cursor.fetchall()
-            headers = [i[0] for i in con_cursor.description]
+            result = cursor.fetchall()
+            headers = [i[0] for i in cursor.description]
             return headers, result
         else:
             global_connection.commit()  # Commit changes for INSERT, UPDATE, DELETE, etc.
@@ -236,7 +229,6 @@ def export_database(db_name ,table_list, path, extension):
 
 def search_database(database, term_to_search ):
     try : 
-        cursor = global_connection.cursor()
         make_db_search_queries = f"""
         SELECT CONCAT(
             'SELECT ''', TABLE_NAME, ''' AS table_name, ''', COLUMN_NAME, ''' AS value FROM ',
@@ -270,7 +262,6 @@ def search_database(database, term_to_search ):
 
 def search_table(term_to_search , database , table):
     rows = []
-    cursor = global_connection.cursor()
     search_table_query = f"""
         SELECT CONCAT('SELECT * FROM ', table_name, ' WHERE ', column_name, ' LIKE ''{term_to_search}''')
         FROM INFORMATION_SCHEMA.COLUMNS
@@ -339,14 +330,13 @@ def sql_dump(path , table=None, *args):
 
 def sql_import(path):
     try:
-        con_cursor = global_connection.cursor()
         # Read SQL file content
         with open(path, 'r') as sql_file:
             sql_script = sql_file.read()
     
         # Execute the SQL script
-        con_cursor.execute(sql_script , multi=True)
-        con_cursor.commit()
+        cursor.execute(sql_script , multi=True)
+        cursor.commit()
 
     except Exception as err:
         return err
@@ -386,7 +376,6 @@ def copy_db(db_name,*args):
 
 def rename_table(table , new_name):
     try : 
-        cursor = global_connection.cursor()
         cursor.execute(f"ALTER TABLE {table} RENAME TO {new_name};")
         global_connection.commit()
     except Exception as err :
@@ -394,7 +383,6 @@ def rename_table(table , new_name):
     
 def empty_table(table):
     try : 
-        cursor = global_connection.cursor()
         cursor.execute(f"DELETE FROM {table};")
         global_connection.commit()
     except Exception as err :
@@ -429,51 +417,48 @@ def rename_database(db_name , new_name):
         drop_db(db_name)
     except Exception as err:
         return err
+
 """Insert row into table"""
 def insert_into_table(db_name,table , new_values , columns):
     try :
         new_values = [f"'{i}'" if  i is not None else 'NULL' for i in new_values]
-        con_cursor = global_connection.cursor()
         insert_column= ', '.join([f"{column}" for column in columns])
         insert_values= ', '.join([f"{value}" for value in new_values])
 
         insert_query = f"INSERT INTO {table} ({insert_column}) VALUES ({insert_values});"
         print(insert_query)
-        con_cursor.execute(insert_query)
+        cursor.execute(insert_query)
         global_connection.commit()
     except Exception as err :
         print(err)
 
 """Get the Foreign keys in a table (the columns)"""
 def fk_in_table(db_name , table):
-    con_cursor = global_connection.cursor()
     # to get the foreign keys in a table (the one to whom the record belongs) 
-    con_cursor.execute(f"SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND TABLE_NAME = '{table}';") 
-    foreign_keys_list = con_cursor.fetchall()
+    cursor.execute(f"SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND TABLE_NAME = '{table}';") 
+    foreign_keys_list = cursor.fetchall()
     return foreign_keys_list
 
 """Get the Values of the foreign key"""
 def get_foreign_keys_values(db_name , table):
-    con_cursor = global_connection.cursor()
     foreign_keys_list = fk_in_table(db_name , table)
 
     for table , column in get_foreign_keys(foreign_keys_list ,db_name).items():
-        con_cursor.execute(f"SELECT {column} FROM {table};")
-        results = con_cursor.fetchall()
+        cursor.execute(f"SELECT {column} FROM {table};")
+        results = cursor.fetchall()
     if results : return results
 
 """To get the tables and columns where a key is used as foreign key"""
 def get_foreign_keys(foreign_keys_list , db_name):
-    con_cursor = global_connection.cursor()
     tables_to_check = {}
     # to get the the tables and the columns where the foreign keys are primary
     for foreign_key in foreign_keys_list :
-        con_cursor.execute(f"SELECT REFERENCED_TABLE_NAME , REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ('{foreign_key[0]}');")
-        tab_col_couple = con_cursor.fetchall()
+        cursor.execute(f"SELECT REFERENCED_TABLE_NAME , REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = '{db_name}' AND REFERENCED_COLUMN_NAME IN ('{foreign_key[0]}');")
+        tab_col_couple = cursor.fetchall()
         tables_to_check[tab_col_couple[0][0]] = tab_col_couple[0][1]
     return tables_to_check
 
-
+"""Create a Trigger"""
 def trigger(trigger_name,time,event,table_name,logic):
     try :
         trigger_syntax = f"""DELIMITER $$
@@ -486,15 +471,30 @@ def trigger(trigger_name,time,event,table_name,logic):
         END$$
         DELIMITER ;
         """
-
-        con_cursor = global_connection.cursor()
-        con_cursor.execute(trigger_syntax)
+        cursor.execute(trigger_syntax)
         global_connection.commit()
 
     except Exception as err :   
         return err
 
-#for  and delete row , delete column
+def delete_row(table , key_val_couple):
+    try : 
+        where_clause = ' AND '.join([f"{key} = '{value}'" for key,value in key_val_couple])
+
+        delete_query = f"DELETE FROM {table} WHERE {where_clause}"
+        cursor.execute(delete_query)
+        global_connection.commit()
+    except Exception as err :
+        print(err)
+
+def drop_column(table , column) :
+    try:
+        drop_column_query = f"ALTER TABLE {table} DROP COLUMN {column};"
+        cursor.execute(drop_column_query)
+        global_connection.commit()
+    except Exception as err :
+        return err
+
 # ALTER TABLE child_table
 # ADD CONSTRAINT fk_parent_id
 # FOREIGN KEY (parent_id)

@@ -144,7 +144,7 @@ def click_on_row(db_name , frame,primary_keys,table ,headers , selected_row):
             if couple[0] == key :
                 keys_values_couples.append(couple)
 
-    update_row_window(db_name , frame ,table , headers , selected_row ,keys_values_couples)
+    operations_on_row(db_name , frame ,table , headers , selected_row ,keys_values_couples)
 
 """ The Login Page """
 def create_login_page(): 
@@ -200,7 +200,7 @@ def create_login_page():
     theme_button('Vapor_label' , "Vapor Theme" , 5)
     theme_button('solar_label' , "Morph Theme" , 5)
 
-    doc_button = ttk.Button(master=frame, text="Documentation" , style="Hyperlink.TButton" , command=lambda : webbrowser.open('https://github.com/Baragsen/MySQL-gui'))
+    doc_button = ttk.Button(master=frame, text="Documentation" , style="Hyperlink.TButton" , command=lambda : webbrowser.open('https://github.com/NizarKarroud/MySQL-gui'))
     doc_button.pack(anchor='e' , side='right' , pady=(150,10) , padx=5)
 
 
@@ -804,9 +804,8 @@ def table_tabs(db_name , table):
     operations_frame = ttk.Frame(notebook)
     operations_frame.pack(expand=True ,fill='both')
 
-
-    rename_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
-    rename_frame.pack(fill='x', padx=10, pady=(30, 0) , ipady=70)
+    rename_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
+    rename_frame.pack(fill='x', padx=10, pady=(20, 0) , ipady=40)
 
     new_name = tk.StringVar()
     new_name_entry = ttk.Entry(rename_frame, textvariable=new_name, width=60)
@@ -815,8 +814,8 @@ def table_tabs(db_name , table):
     rename_table_button = ttk.Button(rename_frame, text="Rename Table", width=50, command=lambda : mysql_con.rename_table(table , new_name.get()))
     rename_table_button.pack(side='right', padx=50)
 
-    empty_table = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
-    empty_table.pack(fill='x', padx=10, pady=(30, 0) , ipady=70)
+    empty_table = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
+    empty_table.pack(fill='x', padx=10, pady=(30, 0) , ipady=40)
 
     empty_label = ttk.Label(empty_table, text="Empty Table Records " , font=('Helvetica' , 12))
     empty_label.pack(side='left',pady=10 , padx =30 )
@@ -824,15 +823,25 @@ def table_tabs(db_name , table):
     empty_table_button = ttk.Button(empty_table, text="Delete Records", width=40, command=lambda :mysql_con.empty_table(table))
     empty_table_button.pack(side='left',pady=10 , padx =60)
 
-    drop_table_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=100)
-    drop_table_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=70)
+    drop_table_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
+    drop_table_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=40)
 
     drop_label = ttk.Label(drop_table_frame, text="Delete Table " , font=('Helvetica' , 12))
     drop_label.pack(side='left',pady=10 , padx =30)
 
     drop_table_button = ttk.Button(drop_table_frame, text="Drop Table", width=40, command=lambda: mysql_con.delete_table(table))
-    drop_table_button.pack(side='left',pady=10 , padx =60)
+    drop_table_button.pack(side='left',pady=10 , padx =60) 
+    
+    drop_column_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
+    drop_column_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=40)
 
+    dropped_column = tk.StringVar()
+    drop_column_label = ttk.Combobox(drop_column_frame, textvariable=dropped_column,  values=columns , width=30)
+    drop_column_label.pack(side='left',pady=10 , padx =30)
+
+    drop_column_button  = ttk.Button(drop_column_frame, text="Drop Column", width=40, command=lambda: mysql_con.drop_column(table , dropped_column.get()))
+    drop_column_button.pack(side='left',pady=10 , padx =60) 
+    
     notebook.add(child=operations_frame ,text='Operations')
 
     sql_dump_frame = ttk.Frame(notebook)
@@ -895,7 +904,7 @@ def table_tabs(db_name , table):
     notebook.add(child=data_vis_frame ,text='Visualize Data')
 
 """ UPDATE row values """
-def update_row_window(db_name , frame ,table , columns, selected_row , key_val_cpl):    
+def operations_on_row(db_name , frame ,table , columns, selected_row , key_val_cpl):    
     window = tk.Toplevel(app)
     window.geometry("800x600")
     window.title("Alter Row")
@@ -935,8 +944,12 @@ def update_row_window(db_name , frame ,table , columns, selected_row , key_val_c
     inner_frame.bind("<Configure>", _configure_scroll_region)
 
     # Add a button to submit the changes
-    submit_button = ttk.Button(inner_frame, text="Update", command=lambda : get_values(db_name , table))
+    submit_button = ttk.Button(inner_frame, text="Update", command=lambda :update_row(db_name , table) )
     submit_button.pack(padx=10, pady=20)
+
+    delete_row_button = ttk.Button(inner_frame, text="Delete row ", command=lambda :delete_row(db_name , table , key_val_cpl) )
+    delete_row_button.pack(padx=10, pady=20)
+
 
     # Bind the canvas scrolling to mousewheel events
     def _on_mousewheel(event):
@@ -949,10 +962,18 @@ def update_row_window(db_name , frame ,table , columns, selected_row , key_val_c
         new_values = [entry.get() for entry in entries]
         window.destroy()
         frame.destroy()
-      
+        return new_values
+    
+    def update_row(db_name , table): 
+        new_values = get_values(db_name , table)
         mysql_con.alter_table(db_name,table , new_values , columns ,key_val_cpl)
         table_tabs(db_name , table)
 
+    def delete_row(db_name , table , key_val_cpl):
+        window.destroy()
+        frame.destroy()
+        mysql_con.delete_row(table , key_val_cpl)
+        table_tabs(db_name , table)
 
 def save_theme_settings(theme_name):
     with open('theme_settings.json', 'w') as file:
