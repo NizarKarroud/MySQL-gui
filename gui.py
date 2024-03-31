@@ -11,8 +11,7 @@ frame_to_destroy = []
 
 """ The Login Logic"""
 def login_success(frame , hostname  ,port ,username , password ) :
-    connection = mysql_con.handle_login(hostname= 'localhost',username='root',passw= 'root' , port="3306") 
-        # hostname= hostname ,username= username ,passw= password , port=port 
+    connection = mysql_con.handle_login(hostname= hostname ,username= username ,passw= password , port=port) 
     if connection == True :
         frame.destroy()
         app.unbind("<Return>")
@@ -94,6 +93,7 @@ def sql_query(query):
         messagebox.showerror(title='Error' , message=result )
 
     # if headers ==None and rows ==none
+
 def click_on_search_row(db_name , term , table_col_couple):
     table_col_couple.pop()
     columns , rows , primary_key = mysql_con.show_search_records(table_col_couple, term )
@@ -202,7 +202,6 @@ def create_login_page():
 
     doc_button = ttk.Button(master=frame, text="Documentation" , style="Hyperlink.TButton" , command=lambda : webbrowser.open('https://github.com/NizarKarroud/MySQL-gui'))
     doc_button.pack(anchor='e' , side='right' , pady=(150,10) , padx=5)
-
 
 """ The Database Menu and Create new Database functionality """
 def database_menu():
@@ -569,8 +568,7 @@ def tables_frame(menu_frame , db_name):
     create_trigger.grid(row=5 , column=3 , sticky='se' , padx=10 , pady=20)
 
     notebook.add(triggers_frame , text='Triggers')
-    
-
+     
 """ TABLE CREATION PAGE """
 def table_create_page():
 
@@ -603,7 +601,7 @@ def table_create_page():
     tree_x_Scrollbar = ttk.Scrollbar(treeframe , orient="horizontal")
     tree_x_Scrollbar.pack(fill="x" , side="bottom")
 
-    columns = ["Name" , "Type" , "Length/Values" , "Null" , "Index" , "Reference" ]
+    columns = ["Name" , "Type" , "Length/Values" , "Null", "Index" , "Reference", 'A_I' ] 
     # Create a Treeview widget
     treeview = ttk.Treeview(treeframe,show='headings', xscrollcommand=tree_x_Scrollbar.set ,yscrollcommand= tree_y_Scrollbar.set,height=1 , columns=columns)
     treeview.pack()
@@ -623,7 +621,7 @@ def table_create_page():
     table_label = ttk.Label(create_column_frame , text='Table Name : ')
     table_label.grid(row=0 , column=0 , padx=30 , pady=30 )
 
-    # New Table's Name
+    # New Table's Name  
     table_name = tk.StringVar()
     table_name_entry = ttk.Entry(create_column_frame, textvariable=table_name )
     table_name_entry.grid(row=0 , column=1 , padx=(5,30) , pady=30)
@@ -635,15 +633,18 @@ def table_create_page():
 
     # adding columns to the new table
     def add_column():
-        column_name = tk.StringVar()
-        option = tk.StringVar()
-        type_values = ["TINYINT" , "SMALLINT" , "MEDIUMINT" , "BIGINT" , "DECIMAL" , "FLOAT" , "DOUBLE" , "REAL" , "BIT" , "BOOLEAN" , "DATE" , "SERIAL" , "DATETIME" , "TIMESTAMP" , "TIME", "YEAR" , "CHAR" , "VARCHAR" , "TINYTEXT" , "TEXT" , "MEDIUMTEXT" , "LONGTEXT" , "BINARY" , "VARBINARY" , "ENUM" , "SET" , "JSON"]
+        # column_name = tk.StringVar()
+        # option = tk.StringVar()
+        # column_length = tk.StringVar()
+        # type_values = ["TINYINT" , "SMALLINT" , "MEDIUMINT" , "BIGINT" , "DECIMAL" , "FLOAT" , "DOUBLE" , "REAL" , "BIT" , "BOOLEAN" , "DATE" , "SERIAL" , "DATETIME" , "TIMESTAMP" , "TIME", "YEAR" , "CHAR" , "VARCHAR" , "TINYTEXT" , "TEXT" , "MEDIUMTEXT" , "LONGTEXT" , "BINARY" , "VARBINARY" , "ENUM" , "SET" , "JSON"]
         
-        # incomplete
+        # column_name_entry = ttk.Entry(treeview, textvariable=column_name)
+        # # column_name_entry.pack()
+        # data_type = ttk.Combobox(treeview, textvariable=option , values=type_values)
+        # column_length_entry = ttk.Entry(treeview, textvariable=column_length)
 
-        row = [ttk.Entry(create_column_frame, textvariable=column_name) , ttk.OptionMenu(create_column_frame, variable=option)]
         treeview.config(height=int(treeview.cget("height"))+1)
-        treeview.insert("" , tk.END , values=...)   
+        treeview.insert("" , tk.END , values=("", "", "", "", "", ""))  
 
 """ TABLE Tabs """
 def table_tabs(db_name , table):

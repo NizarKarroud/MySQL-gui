@@ -495,9 +495,3 @@ def drop_column(table , column) :
     except Exception as err :
         return err
 
-# ALTER TABLE child_table
-# ADD CONSTRAINT fk_parent_id
-# FOREIGN KEY (parent_id)
-# REFERENCES parent_table(parent_id)
-# ON DELETE CASCADE;
-    
