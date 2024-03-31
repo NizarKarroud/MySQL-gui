@@ -5,6 +5,7 @@ import tkinter as tk
 import ttkbootstrap
 import json
 import webbrowser
+import data_vis
 
 
 frame_to_destroy = []
@@ -902,6 +903,27 @@ def table_tabs(db_name , table):
 
     data_vis_frame = ttk.Frame(notebook)
     data_vis_frame.pack(expand=True ,fill='both')
+
+    vis_label = ttk.Label(data_vis_frame ,text='Visualize Column Data' , font=('Helvetica' , 20))
+    vis_label.pack(side='top' , pady=20 )
+
+    visualized_column = tk.StringVar()
+    visualized_column.trace_add('write', lambda name, index, mode : display_plots_list())
+    vis_column_list = ttk.Combobox(data_vis_frame, textvariable=visualized_column , values=columns , width=30 )
+    vis_column_list.pack(side='top' , pady=20 )
+
+    plots_combobox = ttk.Combobox(data_vis_frame, width=30)  
+    plots_combobox.pack_forget()
+
+    def display_plots_list(*args):
+        selected_column = visualized_column.get()
+        plots_list = data_vis.get_possible_plots(table , selected_column)
+        if plots_list:
+            plots_combobox.config(values=plots_list)
+            plots_combobox.pack(side='top', pady=40)
+        else:
+            plots_combobox.pack_forget()  # Hide the secondary dropdown if no values are available
+
     notebook.add(child=data_vis_frame ,text='Visualize Data')
 
 """ UPDATE row values """

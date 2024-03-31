@@ -15,6 +15,8 @@ cursor = None
 
 def handle_login(hostname,username , passw , port=3306,db=None):
     try : 
+        if port == "" : 
+            port = 3306
         connection = mysql.connector.connect(host=hostname , user=username , password=passw , port=port ,database=db, auth_plugin='mysql_native_password')
         if isinstance(connection , mysql.connector.connection.MySQLConnection) :
             globals()["global_connection"]= connection
