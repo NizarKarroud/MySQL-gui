@@ -5,14 +5,14 @@ import tkinter as tk
 import ttkbootstrap
 import json
 import webbrowser
-import data_vis
 
 
 frame_to_destroy = []
 
 """ The Login Logic"""
 def login_success(frame , hostname  ,port ,username , password ) :
-    connection = mysql_con.handle_login(hostname= hostname ,username= username ,passw= password , port=port) 
+    connection = mysql_con.handle_login(hostname= "127.0.0.1" ,username= "root" ,passw= 'root' , port="3306") 
+    #hostname= hostname ,username= username ,passw= password , port=port
     if connection == True :
         frame.destroy()
         app.unbind("<Return>")
@@ -406,9 +406,9 @@ def tables_frame(menu_frame , db_name):
 
     notebook.add(copy_db , text='Copy Database')
 
-    priv_frame = ttk.Frame(notebook)
-    priv_frame.pack(fill="both" , expand=True)
-    notebook.add(priv_frame , text='User Privileges')
+    # priv_frame = ttk.Frame(notebook)
+    # priv_frame.pack(fill="both" , expand=True)
+    # notebook.add(priv_frame , text='User Privileges')
 
     export_frame = ttk.Frame(notebook )
     export_frame.pack(fill="both" , expand=True , padx=30 , pady= 30)
@@ -838,7 +838,7 @@ def table_tabs(db_name , table):
     drop_column_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=40)
 
     dropped_column = tk.StringVar()
-    drop_column_label = ttk.Combobox(drop_column_frame, textvariable=dropped_column,  values=columns , width=30)
+    drop_column_label = ttk.Combobox(drop_column_frame, textvariable=dropped_column,  values=columns , width=30 , state='readonly')
     drop_column_label.pack(side='left',pady=10 , padx =30)
 
     drop_column_button  = ttk.Button(drop_column_frame, text="Drop Column", width=40, command=lambda: mysql_con.drop_column(table , dropped_column.get()))
@@ -906,23 +906,34 @@ def table_tabs(db_name , table):
 
     vis_label = ttk.Label(data_vis_frame ,text='Visualize Column Data' , font=('Helvetica' , 20))
     vis_label.pack(side='top' , pady=20 )
-
+    
     visualized_column = tk.StringVar()
-    visualized_column.trace_add('write', lambda name, index, mode : display_plots_list())
-    vis_column_list = ttk.Combobox(data_vis_frame, textvariable=visualized_column , values=columns , width=30 )
+    vis_column_list = ttk.Combobox(data_vis_frame, textvariable=visualized_column , values=columns , width=30 ,state='readonly' )
     vis_column_list.pack(side='top' , pady=20 )
+    vis_column_list.bind("<<ComboboxSelected>>" , lambda event : update_plots())
 
-    plots_combobox = ttk.Combobox(data_vis_frame, width=30)  
-    plots_combobox.pack_forget()
+    plots_to_visualize = tk.StringVar()
+    plots_combobox = ttk.Combobox(data_vis_frame,textvariable=plots_to_visualize, width=30 , values=[] , state='readonly')  
+    plots_combobox.pack(side='top' , pady=20 )
+    plots_combobox.bind("<<ComboboxSelected>>" , lambda event : update_measures())
 
-    def display_plots_list(*args):
-        selected_column = visualized_column.get()
-        plots_list = data_vis.get_possible_plots(table , selected_column)
-        if plots_list:
-            plots_combobox.config(values=plots_list)
-            plots_combobox.pack(side='top', pady=40)
-        else:
-            plots_combobox.pack_forget()  # Hide the secondary dropdown if no values are available
+    statistical_measure = tk.StringVar()
+    statistical_measure_combobox = ttk.Combobox(data_vis_frame,textvariable=statistical_measure, width=30 , values=[] , state='readonly')  
+    statistical_measure_combobox.pack(side='top' , pady=20 )
+
+    visualize_button = ttk.Button(data_vis_frame , text='Create' , command= lambda : mysql_con.generate_plot(plots[2] ,plots_to_visualize.get(), statistical_measure.get()))
+    visualize_button.pack(side='top' , pady=20 )
+    
+    plots = None
+    def update_measures():
+        measures = mysql_con.get_possible_measures( plots_to_visualize.get(), plots[0])
+        statistical_measure_combobox.config(values=measures)
+
+    def update_plots():
+        nonlocal plots
+        plots = mysql_con.get_possible_plots(table , visualized_column.get())
+        plots_combobox.config(values=plots[1])
+
 
     notebook.add(child=data_vis_frame ,text='Visualize Data')
 
@@ -1012,6 +1023,8 @@ def load_theme_settings():
     
 app = tk.Tk()
 app.geometry("1024x768")
+app.title("MySQL Administration")
+
 
 saved_theme = load_theme_settings()
 if saved_theme:

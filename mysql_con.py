@@ -1,10 +1,48 @@
 import mysql.connector
-import pandas as pd
 import os
 import shutil
 from collections import Counter
 import subprocess
+import pandas as pd
+from wordcloud import WordCloud 
+import matplotlib.pyplot as plt
+import scipy
+data_structure = {
+    'int64': {
+        'hist': [ 'mode' , 'value_counts'],
+        'box': ["",'value_counts' ],
+        'line': ["",'value_counts'],
+        'kde': [],
+        'bar': ["",'value_counts'],
+        "area" : ["","value_counts" , 'cumsum'],
+    },
+    'float64': {
+        'hist': ['value_counts' , "mode"],
+        'box': ["",'value_counts'],
+        'line': ["",'value_counts'],
+        'kde': [],
+        'bar': ["",'value_counts'],
+        "area" : ["","value_counts" , 'cumsum'],
 
+    },
+    'datetime64': {
+        'line': ["",'value_counts'],
+    },
+    'timedelta64': {
+        'hist': ["",'value_counts'],
+        'line': ["",'value_counts']
+    },
+    'object': {
+        'bar': ['value_counts'],
+        'wordcloud': ['wordcloud']
+    },
+    'category': {
+        'bar': ['value_counts']
+    },
+    'bool': {
+        'bar': ['value_counts']
+    }
+}
 global_connection = None
 hostname = None
 username = None
@@ -497,3 +535,47 @@ def drop_column(table , column) :
     except Exception as err :
         return err
 
+
+
+def create_dataframe_from_mysql( table):
+    try : 
+        query = f'SELECT * FROM {table}'
+        df = pd.read_sql_query(query , global_connection)
+        return df
+    except Exception as err :
+        return err 
+
+def get_possible_plots(table , column):
+    try : 
+        df = create_dataframe_from_mysql(table)
+        data_type = df[column].dtype
+        plot_list = [plot_type for data_types, data_plots in data_structure.items() if str(data_type) in data_types for plot_type in data_plots.keys()]
+        return (str(data_type),plot_list , df[column])
+    except Exception as err :
+        print(err)
+    
+def get_possible_measures(plot_type , data_type):
+    return data_structure[data_type][plot_type]
+
+def generate_plot(df , plot_type, measure):
+    try : 
+        if not measure :
+            df.plot(kind=plot_type) 
+            plt.ylabel(measure)
+            plt.title(f'{measure} {plot_type}')
+            plt.show()
+        elif measure in dir(df) and callable(getattr(df, measure)):
+            getattr(df, measure)().plot(kind=plot_type)
+            plt.ylabel(measure)
+            plt.title(f'{measure} {plot_type}')
+            plt.show()            
+        else :        
+            text_data = ' '.join(df)
+            wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text_data)
+            plt.figure(figsize=(10, 5))
+            plt.imshow(wordcloud, interpolation='bilinear')
+            plt.axis('off')
+            plt.title('Word Cloud')
+            plt.show()
+    except Exception as err :
+        print(err)
