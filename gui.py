@@ -612,7 +612,7 @@ def table_create_page():
         treeview.heading(column , text=column)
 
     # the table create button
-    execute_button = ttk.Button( create_column_frame , text='Execute' , command=...  )
+    execute_button = ttk.Button( create_column_frame , text='Execute' , command= lambda : mysql_con.create_table(table_name.get() ,[treeview.item(row, 'values') for row in treeview.get_children()]) )
     execute_button.grid(row=0 , column=3 , padx=140)
 
     tree_y_Scrollbar.config(command=treeview.yview)
@@ -634,18 +634,105 @@ def table_create_page():
 
     # adding columns to the new table
     def add_column():
-        # column_name = tk.StringVar()
-        # option = tk.StringVar()
-        # column_length = tk.StringVar()
-        # type_values = ["TINYINT" , "SMALLINT" , "MEDIUMINT" , "BIGINT" , "DECIMAL" , "FLOAT" , "DOUBLE" , "REAL" , "BIT" , "BOOLEAN" , "DATE" , "SERIAL" , "DATETIME" , "TIMESTAMP" , "TIME", "YEAR" , "CHAR" , "VARCHAR" , "TINYTEXT" , "TEXT" , "MEDIUMTEXT" , "LONGTEXT" , "BINARY" , "VARBINARY" , "ENUM" , "SET" , "JSON"]
-        
-        # column_name_entry = ttk.Entry(treeview, textvariable=column_name)
-        # # column_name_entry.pack()
-        # data_type = ttk.Combobox(treeview, textvariable=option , values=type_values)
-        # column_length_entry = ttk.Entry(treeview, textvariable=column_length)
+        root = tk.Toplevel()
+        root.title("Column FORM")
+        root.geometry("400x300")
 
-        treeview.config(height=int(treeview.cget("height"))+1)
-        treeview.insert("" , tk.END , values=("", "", "", "", "", ""))  
+
+        label_name = tk.Label(root, text="Name")
+        label_name.grid(row=0, column=0, padx=5, pady=5, sticky='e')
+
+        label_type = tk.Label(root, text="Type")
+        label_type.grid(row=1, column=0, padx=5, pady=5, sticky='e')
+
+        label_length = tk.Label(root, text="Length/Values")
+        label_length.grid(row=2, column=0, padx=5, pady=5, sticky='e')
+
+        label_index = tk.Label(root, text="Index")
+        label_index.grid(row=3, column=0, padx=5, pady=5, sticky='e')
+
+        ref_label = tk.Label(root, text="Reference")
+
+        name_entry = tk.Entry(root)
+        name_entry.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+
+        length_values_entry = tk.Entry(root)
+        length_values_entry.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
+        reference_entry = tk.Entry(root)
+
+        type_list = ["TINYINT" , "SMALLINT" , "MEDIUMINT" , "INT", "BIGINT" , "DECIMAL" , "FLOAT" , "DOUBLE" , "REAL" 
+        , "BIT" , "BOOLEAN" , 
+        "DATE" , "SERIAL" , "DATETIME" , "TIMESTAMP" , "TIME", "YEAR" , 
+        "CHAR" , "VARCHAR" , "TINYTEXT" , "TEXT" , "MEDIUMTEXT" , "LONGTEXT" , 
+        "BINARY" , "VARBINARY" ,
+        "TINYBLOB" , "BLOB" , "MEDIUMBLOB" , "LONGBLOB",
+        "ENUM" , "SET" , "JSON"]
+
+        type_column = tk.StringVar()
+        type_combobox = ttk.Combobox(root,textvariable=type_column, values=type_list, state='readonly')
+        type_combobox.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
+        type_combobox.current(0)
+
+        index_column = tk.StringVar()
+        index_combobox = ttk.Combobox(root, textvariable=index_column, values=["", "PRIMARY KEY", "UNIQUE", "FOREIGN KEY"] , state='readonly')
+        index_combobox.grid(row=3, column=1, padx=5, pady=5, sticky='ew')
+        index_combobox.current(0)
+        index_combobox.bind("<<ComboboxSelected>>" , lambda event : references(index_column.get()))
+
+
+        def references(type_index):
+            if type_index =="FOREIGN KEY" :
+                reference_entry.grid(row=5, column=1, padx=5, pady=5, sticky='ew')
+                ref_label.grid(row=5, column=0, padx=5, pady=5, sticky='e')
+                ai_checkbox.grid_forget()
+            elif type_index =="PRIMARY KEY" or type_index =="UNIQUE" :
+                null_checkbox.grid_forget()
+                ai_checkbox.grid(row=6, column=1, padx=5, pady=5, sticky='w')
+            else : 
+                reference_entry.grid_forget()
+                ref_label.grid_forget()
+                null_checkbox.grid(row=6, column=2, padx=10, pady=5, sticky='w')
+                ai_checkbox.grid_forget()
+
+
+        null_var = tk.BooleanVar()
+        null_checkbox = tk.Checkbutton(root, text="Null", variable=null_var)
+        null_checkbox.grid(row=6, column=2, padx=10, pady=5, sticky='w')
+
+        ai_var = tk.BooleanVar()
+        ai_checkbox = tk.Checkbutton(root, text="A_I", variable=ai_var)
+        ai_checkbox.grid(row=6, column=1, padx=5, pady=5, sticky='w')
+        
+        def submit_form() : 
+            name = name_entry.get()
+            data_type = type_combobox.get()
+            length_values = length_values_entry.get()
+            null_value = null_var.get()
+            index_value = index_combobox.get()
+            reference = reference_entry.get()
+            ai_value = ai_var.get()
+
+
+            treeview.config(height=int(treeview.cget("height"))+1)
+            treeview.insert("" , tk.END , values=[name , data_type , length_values , null_value , index_value , reference , ai_value])  
+            
+            name_entry.delete(0, 'end')
+            type_combobox.set('')
+            length_values_entry.delete(0, 'end')
+            index_combobox.set('')
+            reference_entry.delete(0, 'end')
+            null_var.set(False)
+            ai_var.set(False)
+
+
+        submit_button = tk.Button(root, text="Submit", command=lambda : submit_form())
+        submit_button.grid(row=7, column=0, columnspan=2, padx=5, pady=10)
+
+        root.grid_rowconfigure(8, weight=1)
+        root.grid_columnconfigure(2, weight=1)
+
+        root.mainloop()
+
 
 """ TABLE Tabs """
 def table_tabs(db_name , table):

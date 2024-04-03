@@ -7,6 +7,7 @@ import pandas as pd
 from wordcloud import WordCloud 
 import matplotlib.pyplot as plt
 import scipy
+
 data_structure = {
     'int64': {
         'hist': [ 'mode' , 'value_counts'],
@@ -535,7 +536,30 @@ def drop_column(table , column) :
     except Exception as err :
         return err
 
+def create_table(table_name , columns_list):
+    try :
+        query = f"CREATE TABLE {table_name}( "
+        for column in columns_list :
+            column_name, data_type, size, nullable, index, reference, auto_increment = column
+            column_syntax = f"{column_name} {data_type}({size})"
+            if index != "" and index != "FOREIGN KEY" :
+                column_syntax+= f" {index} "
+            if nullable == "True" :
+                column_syntax += " NULL "
+            else :
+                column_syntax += " NOT NULL "
+            if auto_increment == "True" :
+                column_syntax += " AUTO_INCREMENT "    
+            if reference :
+                column_syntax += f",\n FOREIGN KEY ({column_name}) REFERENCES {reference}"     
+            query += column_syntax + ", "  
+        query = query[:-2] + ");"   
+        print(query) 
 
+        cursor.execute(query)
+        global_connection.commit(   ) 
+    except Exception as err :
+        print(err)
 
 def create_dataframe_from_mysql( table):
     try : 
