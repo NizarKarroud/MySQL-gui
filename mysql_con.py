@@ -67,6 +67,7 @@ def handle_login(hostname,username , passw , port=3306,db=None ,auth_plugin='mys
             globals()["password"]= passw
             globals()["port" ]= port
             globals()["db"] = db  
+            globals()["auth_plugin"] = auth_plugin  
             globals()["cursor"] = connection.cursor()
             return True
         else :
