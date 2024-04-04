@@ -52,12 +52,14 @@ password = None
 port = None
 db = None
 cursor = None
-
-def handle_login(hostname,username , passw , port=3306,db=None):
+auth_plugin = None
+def handle_login(hostname,username , passw , port=3306,db=None ,auth_plugin='mysql_native_password'):
     try : 
         if port == "" : 
             port = 3306
-        connection = mysql.connector.connect(host=hostname , user=username , password=passw , port=port ,database=db, auth_plugin='mysql_native_password')
+        if auth_plugin == "" :
+            auth_plugin='mysql_native_password' 
+        connection = mysql.connector.connect(host=hostname , user=username , password=passw , port=port ,database=db, auth_plugin=auth_plugin)
         if isinstance(connection , mysql.connector.connection.MySQLConnection) :
             globals()["global_connection"]= connection
             globals()["hostname"] = hostname

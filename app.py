@@ -10,15 +10,13 @@ import webbrowser
 frame_to_destroy = []
 
 """ The Login Logic"""
-def login_success(frame , hostname  ,port ,username , password ) :
-    connection = mysql_con.handle_login(hostname= hostname ,username= username ,passw= password , port=port) 
-    
+def login_success(frame , hostname  ,port ,username , password , auth_plugin ) :
+    connection = mysql_con.handle_login(hostname= hostname ,username= username ,passw= password , port=port , auth_plugin=auth_plugin) 
     if connection == True :
         frame.destroy()
         app.unbind("<Return>")
         database_menu()
-    else : 
-        messagebox.showerror(title='Error' , message=connection )
+
 
 """To create a Database"""
 def db_create(menu_frame , db_create_entry):
@@ -29,7 +27,7 @@ def db_create(menu_frame , db_create_entry):
 
 """Returns the Tables in a specific Database """
 def show_db_tables(db_name):
-    connection = mysql_con.handle_login(hostname= mysql_con.hostname ,username= mysql_con.username,passw=mysql_con.password , port=mysql_con.port , db=db_name) 
+    connection = mysql_con.handle_login(hostname= mysql_con.hostname ,username= mysql_con.username,passw=mysql_con.password , port=mysql_con.port , db=db_name ,auth_plugin=mysql_con.auth_plugin) 
     if connection == True :
         return mysql_con.show_tables(db_name)
     else : 
@@ -178,17 +176,24 @@ def create_login_page():
     password_entry = ttk.Entry(frame, textvariable=password, show='*')
     password_entry.pack(padx=10, pady=10)
 
-    login_button = ttk.Button(master=frame, text="Login", command=lambda: login_success(frame, hostname.get(), port.get(), username.get(), password.get()))
+    auth_label = ttk.Label(master=frame, text="Auth plugin :")
+    auth_label.pack(pady=10)
+
+    auth = tk.StringVar()
+    auth_entry = ttk.Entry(frame, textvariable=auth )
+    auth_entry.pack(padx=10, pady=10)
+
+    login_button = ttk.Button(master=frame, text="Login", command=lambda: login_success(frame, hostname.get(), port.get(), username.get(), password.get() , auth.get()))
     login_button.pack(pady=10)
 
     def on_enter(event):
-        login_success(frame, hostname.get(), port.get(), username.get(), password.get())
+        login_success(frame, hostname.get(), port.get(), username.get(), password.get() , auth.get())
 
     app.bind("<Return>", on_enter)
     
     def theme_button(button_name , title , padding ) :
         button_name = ttk.Button(master=frame, text=title , style="Hyperlink.TButton" , command= lambda : save_theme_settings(title.split()[0].lower()) )
-        button_name.pack(anchor='w' , side='left' , pady=(150,10) , padx=padding)
+        button_name.pack(anchor='w' , side='left' , pady=(80,10) , padx=padding)
 
     theme_button('darkly_label' , "Darkly Theme" , 5)
     theme_button('solar_label' , "Solar Theme" , 5)
@@ -198,7 +203,7 @@ def create_login_page():
     theme_button('solar_label' , "Morph Theme" , 5)
 
     doc_button = ttk.Button(master=frame, text="Documentation" , style="Hyperlink.TButton" , command=lambda : webbrowser.open('https://github.com/NizarKarroud/MySQL-gui'))
-    doc_button.pack(anchor='e' , side='right' , pady=(150,10) , padx=5)
+    doc_button.pack(anchor='e' , side='right' , pady=(80,10) , padx=5)
 
 """ The Database Menu and Create new Database functionality """
 def database_menu():
