@@ -78,7 +78,7 @@ def show_databases():
         databases = cursor.fetchall()
         return databases
     except Exception as err :
-        print(err)
+        return err
 
 def create_database(my_db):
     try :
@@ -112,7 +112,7 @@ def show_search_records(table_col_couple , term):
         columns = [i[0] for i in cursor.description]
         return columns,rows,get_prim_keys(cursor,table)
     except Exception as err :
-        print(err) 
+        return err
         
 def show_table_records(table):
     try :
@@ -121,8 +121,7 @@ def show_table_records(table):
         columns = [i[0] for i in cursor.description]
         return columns,rows,get_prim_keys(cursor,table)
     except Exception as err:
-        print(err)
-        return None
+        return err
 
 def get_prim_keys(cursor,table):
     try :
@@ -132,8 +131,7 @@ def get_prim_keys(cursor,table):
         return [row[4] for i,row in enumerate(rows)]
 
     except Exception as err:
-        print(err)
-        return None
+        return err
 
 
 def alter_table(db_name , table, values , columns,key_val_couple):
@@ -161,20 +159,17 @@ def alter_table(db_name , table, values , columns,key_val_couple):
                 value = dict(zip(columns, values))[column]
                 cursor.execute(f"SELECT COUNT(*) FROM {foreign_table} WHERE {column} = {value};")
                 result = cursor.fetchall()[0]
-                print(result)
                 if result[0] > 0  :
                     set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
 
                     where_clause = ' AND '.join([f"{key} = '{value}'" for key,value in key_val_couple])
 
                     query_update = f"UPDATE {table} SET {set_clause} WHERE {where_clause};"
-                    print(query_update) 
                     cursor.execute(query_update)
 
                     set_clause_keys = {key : value for key , value in zip(columns , values) if any(key == key_couple[0] for key_couple in key_val_couple)}
                     ref_set_clause = ','.join([f"{column} = {value}" for column , value in set_clause_keys.items()])
                     for relation in foreign_relations :
-                        print(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
                         cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
 
                     cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
@@ -186,22 +181,19 @@ def alter_table(db_name , table, values , columns,key_val_couple):
             where_clause = ' AND '.join([f"{key} = '{value}'" for key,value in key_val_couple])
 
             query_update = f"UPDATE {table} SET {set_clause} WHERE {where_clause};"
-            print(query_update) 
             cursor.execute(query_update)
 
 
             set_clause_keys = {key : value for key , value in zip(columns , values) if any(key == key_couple[0] for key_couple in key_val_couple)}
             ref_set_clause = ','.join([f"{column} = {value}" for column , value in set_clause_keys.items()])
             for relation in foreign_relations :
-                print(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
                 cursor.execute(f"UPDATE {relation[0]} SET {ref_set_clause} WHERE {where_clause};")
 
             cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
 
             global_connection.commit()     
     except Exception as err:
-        print(err)
-
+        return err
 # think about migration (sqlalchemy )
         
 def exec_query(query):
@@ -287,19 +279,15 @@ def search_database(database, term_to_search ):
         item_counter = Counter()
 
         for row in results:
-            # Extract the SELECT statement from the row
             select_statement = row[0].strip(" \" ") + ";"
-            print(select_statement)
-            # Execute the SELECT statement
             cursor.execute(select_statement)
-            # Fetch and print the results of the SELECT statement
             select_results = cursor.fetchall()
 
             item_counter.update(select_results)
 
         return list(item_counter.items())
     except Exception as err :
-        print(err)
+        return err
 
 def search_table(term_to_search , database , table):
     rows = []
@@ -316,13 +304,10 @@ def search_table(term_to_search , database , table):
     # Extract the SELECT statement from the row
         select_statement = row[0].rstrip(" \" ") + ";"
         
-        # Execute the SELECT statement
         cursor.execute(select_statement)
 
-        # Fetch and print the results of the SELECT statement
         select_results = cursor.fetchall()
         
-        # Print headers only once
         if not printed_header:
             headers = [i[0] for i in cursor.description]
             header = headers
@@ -467,11 +452,10 @@ def insert_into_table(db_name,table , new_values , columns):
         insert_values= ', '.join([f"{value}" for value in new_values])
 
         insert_query = f"INSERT INTO {table} ({insert_column}) VALUES ({insert_values});"
-        print(insert_query)
         cursor.execute(insert_query)
         global_connection.commit()
     except Exception as err :
-        print(err)
+        return err
 
 """Get the Foreign keys in a table (the columns)"""
 def fk_in_table(db_name , table):
@@ -526,7 +510,7 @@ def delete_row(table , key_val_couple):
         cursor.execute(delete_query)
         global_connection.commit()
     except Exception as err :
-        print(err)
+        return err
 
 def drop_column(table , column) :
     try:
@@ -554,13 +538,11 @@ def create_table(table_name , columns_list):
                 column_syntax += f",\n FOREIGN KEY ({column_name}) REFERENCES {reference}"     
             query += column_syntax + ", "  
         query = query[:-2] + ");"   
-        print(query) 
 
         cursor.execute(query)
         global_connection.commit(   ) 
     except Exception as err :
-        print(err)
-
+        return err
 def create_dataframe_from_mysql( table):
     try : 
         query = f'SELECT * FROM {table}'
@@ -576,7 +558,7 @@ def get_possible_plots(table , column):
         plot_list = [plot_type for data_types, data_plots in data_structure.items() if str(data_type) in data_types for plot_type in data_plots.keys()]
         return (str(data_type),plot_list , df[column])
     except Exception as err :
-        print(err)
+        return err
     
 def get_possible_measures(plot_type , data_type):
     return data_structure[data_type][plot_type]
@@ -602,4 +584,4 @@ def generate_plot(df , plot_type, measure):
             plt.title('Word Cloud')
             plt.show()
     except Exception as err :
-        print(err)
+        return err

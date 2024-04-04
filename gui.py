@@ -98,7 +98,7 @@ def sql_query(query):
 def click_on_search_row(db_name , term , table_col_couple):
     table_col_couple.pop()
     columns , rows , primary_key = mysql_con.show_search_records(table_col_couple, term )
-    
+
     window = tk.Toplevel(app)
     window.geometry("800x600")
     window.title("View Search Results")
@@ -216,9 +216,10 @@ def database_menu():
 
     create_database_button = ttk.Button(menu_frame,text="Create a new Database" ,command=lambda:db_create(menu_frame,new_db.get()))
     create_database_button.pack(side="top", pady=(10,40))
-
+    
     databases = mysql_con.show_databases()
     databases_buttons = [ttk.Button(menu_frame,text=database , command=lambda db=database: tables_frame(menu_frame,db[0])).pack(fill='both',side="top", pady=10) for database in databases]
+
 
 """ Frame that contains the tabs for database Operations and Tables """
 def tables_frame(menu_frame , db_name):
