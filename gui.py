@@ -11,8 +11,8 @@ frame_to_destroy = []
 
 """ The Login Logic"""
 def login_success(frame , hostname  ,port ,username , password ) :
-    connection = mysql_con.handle_login(hostname= "127.0.0.1" ,username= "root" ,passw= 'root' , port="3306") 
-    #hostname= hostname ,username= username ,passw= password , port=port
+    connection = mysql_con.handle_login(hostname= hostname ,username= username ,passw= password , port=port) 
+    
     if connection == True :
         frame.destroy()
         app.unbind("<Return>")
@@ -26,8 +26,6 @@ def db_create(menu_frame , db_create_entry):
     if db_creation == True :
         menu_frame.destroy()
         database_menu()
-    else :
-        messagebox.showerror(title='Error' , message=db_creation )
 
 """Returns the Tables in a specific Database """
 def show_db_tables(db_name):
@@ -43,8 +41,7 @@ def drop_db(frame,db_name):
     if dropped ==True :
         frame.destroy()
         database_menu()
-    else : 
-        messagebox.showerror(title='Error' , message=dropped )
+
 
 """Transition from database to specific table"""
 def db_to_tb(db_name , notebook ,table):
@@ -98,7 +95,6 @@ def sql_query(query):
 def click_on_search_row(db_name , term , table_col_couple):
     table_col_couple.pop()
     columns , rows , primary_key = mysql_con.show_search_records(table_col_couple, term )
-
     window = tk.Toplevel(app)
     window.geometry("800x600")
     window.title("View Search Results")

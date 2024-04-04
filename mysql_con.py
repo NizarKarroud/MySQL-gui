@@ -4,6 +4,7 @@ import shutil
 from collections import Counter
 import subprocess
 import pandas as pd
+from tkinter import messagebox
 from wordcloud import WordCloud 
 import matplotlib.pyplot as plt
 import scipy
@@ -69,7 +70,8 @@ def handle_login(hostname,username , passw , port=3306,db=None):
         else :
             return False
     except mysql.connector.Error as err:
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 
 def show_databases():
@@ -78,7 +80,7 @@ def show_databases():
         databases = cursor.fetchall()
         return databases
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
 
 def create_database(my_db):
     try :
@@ -86,7 +88,8 @@ def create_database(my_db):
         global_connection.commit()
         return True
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 
 def show_tables(db_name):
@@ -95,14 +98,16 @@ def show_tables(db_name):
         tables = cursor.fetchall()
         return tables
     except Exception as err:
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 def drop_db(db_name):
     try :
         cursor.execute(f"DROP DATABASE {db_name}")
         return True
     except Exception as err:
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 def show_search_records(table_col_couple , term):
     try :
@@ -112,7 +117,8 @@ def show_search_records(table_col_couple , term):
         columns = [i[0] for i in cursor.description]
         return columns,rows,get_prim_keys(cursor,table)
     except Exception as err :
-        return err
+        messagebox.showerror(title="Error" , message=err)
+ 
         
 def show_table_records(table):
     try :
@@ -121,7 +127,8 @@ def show_table_records(table):
         columns = [i[0] for i in cursor.description]
         return columns,rows,get_prim_keys(cursor,table)
     except Exception as err:
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 def get_prim_keys(cursor,table):
     try :
@@ -131,7 +138,8 @@ def get_prim_keys(cursor,table):
         return [row[4] for i,row in enumerate(rows)]
 
     except Exception as err:
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 
 def alter_table(db_name , table, values , columns,key_val_couple):
@@ -193,7 +201,8 @@ def alter_table(db_name , table, values , columns,key_val_couple):
 
             global_connection.commit()     
     except Exception as err:
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 # think about migration (sqlalchemy )
         
 def exec_query(query):
@@ -211,7 +220,8 @@ def exec_query(query):
             global_connection.commit()  # Commit changes for INSERT, UPDATE, DELETE, etc.
             return True  # Query executed successfully
     except Exception as err:
-        return err 
+        messagebox.showerror(title='Error' , message=err) 
+ 
 
 def export_database(db_name ,table_list, path, extension):
     tables = table_list[:]
@@ -287,7 +297,8 @@ def search_database(database, term_to_search ):
 
         return list(item_counter.items())
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 def search_table(term_to_search , database , table):
     rows = []
@@ -350,9 +361,9 @@ def sql_dump(path , table=None, *args):
             if error:
                 return error
 
+    except Exception as err:
+        messagebox.showerror(title='Error' , message=err) 
 
-    except Exception as e:
-        return e
 
 def sql_import(path):
     try:
@@ -365,7 +376,8 @@ def sql_import(path):
         cursor.commit()
 
     except Exception as err:
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
     
 def copy_db(db_name,*args):
     # CREATE
@@ -398,21 +410,24 @@ def copy_db(db_name,*args):
         process.communicate(input=query)
 
     except Exception as err:
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 def rename_table(table , new_name):
     try : 
         cursor.execute(f"ALTER TABLE {table} RENAME TO {new_name};")
         global_connection.commit()
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
     
 def empty_table(table):
     try : 
         cursor.execute(f"DELETE FROM {table};")
         global_connection.commit()
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 def delete_table(table):
     try : 
@@ -420,7 +435,8 @@ def delete_table(table):
         cursor.execute(f"DROP TABLE {table};")
         global_connection.commit()
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 """Rename Database"""
 def rename_database(db_name , new_name):
@@ -442,7 +458,8 @@ def rename_database(db_name , new_name):
         process.communicate(input=query)
         drop_db(db_name)
     except Exception as err:
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 """Insert row into table"""
 def insert_into_table(db_name,table , new_values , columns):
@@ -455,7 +472,8 @@ def insert_into_table(db_name,table , new_values , columns):
         cursor.execute(insert_query)
         global_connection.commit()
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 """Get the Foreign keys in a table (the columns)"""
 def fk_in_table(db_name , table):
@@ -500,7 +518,8 @@ def trigger(trigger_name,time,event,table_name,logic):
         global_connection.commit()
 
     except Exception as err :   
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 def delete_row(table , key_val_couple):
     try : 
@@ -510,7 +529,8 @@ def delete_row(table , key_val_couple):
         cursor.execute(delete_query)
         global_connection.commit()
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 def drop_column(table , column) :
     try:
@@ -518,7 +538,8 @@ def drop_column(table , column) :
         cursor.execute(drop_column_query)
         global_connection.commit()
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 
 def create_table(table_name , columns_list):
     try :
@@ -542,14 +563,16 @@ def create_table(table_name , columns_list):
         cursor.execute(query)
         global_connection.commit(   ) 
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
 def create_dataframe_from_mysql( table):
     try : 
         query = f'SELECT * FROM {table}'
         df = pd.read_sql_query(query , global_connection)
         return df
     except Exception as err :
-        return err 
+        messagebox.showerror(title='Error' , message=err) 
+ 
 
 def get_possible_plots(table , column):
     try : 
@@ -558,7 +581,8 @@ def get_possible_plots(table , column):
         plot_list = [plot_type for data_types, data_plots in data_structure.items() if str(data_type) in data_types for plot_type in data_plots.keys()]
         return (str(data_type),plot_list , df[column])
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
+
     
 def get_possible_measures(plot_type , data_type):
     return data_structure[data_type][plot_type]
@@ -584,4 +608,4 @@ def generate_plot(df , plot_type, measure):
             plt.title('Word Cloud')
             plt.show()
     except Exception as err :
-        return err
+        messagebox.showerror(title='Error' , message=err) 
