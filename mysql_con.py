@@ -53,13 +53,16 @@ port = None
 db = None
 cursor = None
 auth_plugin = None
+
 def handle_login(hostname,username , passw , port=3306,db=None ,auth_plugin='mysql_native_password'):
     try : 
         if port == "" : 
             port = 3306
         if auth_plugin == "" :
             auth_plugin='mysql_native_password' 
+        
         connection = mysql.connector.connect(host=hostname , user=username , password=passw , port=port ,database=db, auth_plugin=auth_plugin)
+        
         if isinstance(connection , mysql.connector.connection.MySQLConnection) :
             globals()["global_connection"]= connection
             globals()["hostname"] = hostname
@@ -74,7 +77,6 @@ def handle_login(hostname,username , passw , port=3306,db=None ,auth_plugin='mys
             return False
     except mysql.connector.Error as err:
         messagebox.showerror(title='Error' , message=err) 
-
 
 
 def show_databases():
@@ -94,7 +96,6 @@ def create_database(my_db):
         messagebox.showerror(title='Error' , message=err) 
 
 
-
 def show_tables(db_name):
     try :
         cursor.execute(f"SHOW TABLES FROM {db_name}")
@@ -103,14 +104,12 @@ def show_tables(db_name):
     except Exception as err:
         messagebox.showerror(title='Error' , message=err) 
 
-
 def drop_db(db_name):
     try :
         cursor.execute(f"DROP DATABASE {db_name}")
         return True
     except Exception as err:
         messagebox.showerror(title='Error' , message=err) 
-
 
 def show_search_records(table_col_couple , term):
     try :
@@ -121,8 +120,7 @@ def show_search_records(table_col_couple , term):
         return columns,rows,get_prim_keys(cursor,table)
     except Exception as err :
         messagebox.showerror(title="Error" , message=err)
- 
-        
+       
 def show_table_records(table):
     try :
         cursor.execute(f"SELECT * FROM {table}")
@@ -131,7 +129,6 @@ def show_table_records(table):
         return columns,rows,get_prim_keys(cursor,table)
     except Exception as err:
         messagebox.showerror(title='Error' , message=err) 
-
 
 def get_prim_keys(cursor,table):
     try :
@@ -142,7 +139,6 @@ def get_prim_keys(cursor,table):
 
     except Exception as err:
         messagebox.showerror(title='Error' , message=err) 
-
 
 
 def alter_table(db_name , table, values , columns,key_val_couple):
@@ -206,8 +202,7 @@ def alter_table(db_name , table, values , columns,key_val_couple):
     except Exception as err:
         messagebox.showerror(title='Error' , message=err) 
 
-# think about migration (sqlalchemy )
-        
+     
 def exec_query(query):
     try:
         cursor.execute(query)
@@ -221,7 +216,7 @@ def exec_query(query):
             return headers, result
         else:
             global_connection.commit()  # Commit changes for INSERT, UPDATE, DELETE, etc.
-            return True  # Query executed successfully
+            return True 
     except Exception as err:
         messagebox.showerror(title='Error' , message=err) 
  
@@ -576,7 +571,6 @@ def create_dataframe_from_mysql( table):
     except Exception as err :
         messagebox.showerror(title='Error' , message=err) 
  
-
 def get_possible_plots(table , column):
     try : 
         df = create_dataframe_from_mysql(table)
@@ -585,24 +579,27 @@ def get_possible_plots(table , column):
         return (str(data_type),plot_list , df[column])
     except Exception as err :
         messagebox.showerror(title='Error' , message=err) 
-
-    
+ 
 def get_possible_measures(plot_type , data_type):
     return data_structure[data_type][plot_type]
 
-def generate_plot(df , plot_type, measure):
-    try : 
-        if not measure :
-            df.plot(kind=plot_type) 
-            plt.ylabel(measure)
-            plt.title(f'{measure} {plot_type}')
+
+def generate_plot(df, plot_type, measure):
+    try:
+        # Check if no measure is provided
+        if not measure:
+            df.plot(kind=plot_type)
+            plt.title(f'{plot_type} Plot') 
             plt.show()
+        # Check if measure is a method of the DataFrame
         elif measure in dir(df) and callable(getattr(df, measure)):
+            # Call the measure method and plot the result
             getattr(df, measure)().plot(kind=plot_type)
             plt.ylabel(measure)
             plt.title(f'{measure} {plot_type}')
-            plt.show()            
-        else :        
+            plt.show()
+        else:
+            # Create a word cloud if measure is not a method of the DataFrame
             text_data = ' '.join(df)
             wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text_data)
             plt.figure(figsize=(10, 5))
@@ -610,5 +607,5 @@ def generate_plot(df , plot_type, measure):
             plt.axis('off')
             plt.title('Word Cloud')
             plt.show()
-    except Exception as err :
-        messagebox.showerror(title='Error' , message=err) 
+    except Exception as err:
+        messagebox.showerror(title='Error', message=err)
