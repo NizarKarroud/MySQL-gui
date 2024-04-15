@@ -1,1 +1,15 @@
-
+tkinter
+mysql.connector
+os
+shutil
+collections
+subprocess
+pandas
+wordcloud
+matplotlib.pyplot
+scipy
+customtkinter
+tkinter 
+ttkbootstrap
+json
+webbrowser
