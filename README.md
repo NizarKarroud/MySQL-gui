@@ -7,10 +7,6 @@
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Usage](#usage)
-- [Screenshots](#screenshots)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
@@ -34,16 +30,29 @@ Welcome to the MySQL Administration GUI Application! This application is designe
 
 ### Installation
 
+#### Option 1: Clone the Repository
+
 1. Clone the repository to your local machine:
 
    ```bash
    git clone https://github.com/NizarKarroud/MySQL-gui.git
 
-2. Prerequisites
+2. Navigate to the cloned directory
+   
+       ```bash
+       cd MySQL-gui
 
+3. Prerequisites
    - Python (version >= 3.6)
    - Libraries :
    
        ```bash
        python -r requirements.txt
    
+#### Option 2: Download the Executable (Windows)
+
+1. Visit the [Releases](https://github.com/NizarKarroud/MySQL-gui/releases/tag/v0.1) section of this repository.
+
+2. Download the latest executable file (`MySQLApp.exe`) from the release assets.
+
+3. Run the executable file to start the MySQL Administration GUI Application.
