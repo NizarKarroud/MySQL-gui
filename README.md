@@ -6,7 +6,6 @@
 - [Features](#features)
 - [Getting Started](#getting-started)
   - [Installation](#installation)
-  - [Usage](#usage)
 
 ## Introduction
 
