@@ -1113,6 +1113,10 @@ def load_theme_settings():
 app = tk.Tk()
 app.geometry("1024x768")
 app.title("MySQL Administration")
+try :
+    app.iconbitmap("icon1.ico")
+except Exception:
+    pass
 
 
 saved_theme = load_theme_settings()

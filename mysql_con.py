@@ -5,9 +5,12 @@ from collections import Counter
 import subprocess
 import pandas as pd
 from tkinter import messagebox
-from wordcloud import WordCloud 
+from wordcloud import WordCloud
+import matplotlib 
 import matplotlib.pyplot as plt
-import scipy
+
+matplotlib.use('TkAgg')
+
 
 data_structure = {
     'int64': {
@@ -591,6 +594,7 @@ def generate_plot(df, plot_type, measure):
             df.plot(kind=plot_type)
             plt.title(f'{plot_type} Plot') 
             plt.show()
+
         # Check if measure is a method of the DataFrame
         elif measure in dir(df) and callable(getattr(df, measure)):
             # Call the measure method and plot the result
@@ -607,5 +611,7 @@ def generate_plot(df, plot_type, measure):
             plt.axis('off')
             plt.title('Word Cloud')
             plt.show()
+
+
     except Exception as err:
         messagebox.showerror(title='Error', message=err)

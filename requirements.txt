@@ -1,4 +1,3 @@
-tkinter
 mysql.connector
 os
 shutil
@@ -6,8 +5,7 @@ collections
 subprocess
 pandas
 wordcloud
-matplotlib.pyplot
-scipy
+matplotlib
 customtkinter
 tkinter 
 ttkbootstrap
