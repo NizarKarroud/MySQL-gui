@@ -52,13 +52,19 @@ data_structure = {
 
 class MySQL_connection:
 
-    def __init__(self, hostname, username, pwd, port=3306, db=None, auth_plugin=''):
+    def __init__(self, hostname, username, pwd, port, auth_plugin , db=None):
         self.__hostname = hostname
         self.__username = username
         self.__pwd = pwd
-        self.__port = port
         self.__db = db
-        self.__auth_plugin = auth_plugin
+        if port == "":
+            self.__port = 3306
+        else :
+            self.__port = port
+        if auth_plugin == "":
+            self.__auth_plugin = ''
+        else :
+            self.__auth_plugin = auth_plugin
         self.connect()
         self.mysql_cursor()
 
@@ -70,15 +76,19 @@ class MySQL_connection:
                 password=self.__pwd  , 
                 port=self.__port ,
                 database=self.__db, 
-                auth_plugin=self.__auth_plugin)
-            
-        except mysql.connector.Error as err:
-            messagebox.showerror(title='Error' , message=err) 
+                auth_plugin=self.__auth_plugin)   
+            self.__connected = True
+        except Exception as err:
+            messagebox.showerror(title='Error' , message=err)
+            self.__connected = False
 
     def mysql_cursor(self):
-        if self.__connection :
-            self.__cursor = self.__connection.cursor()
-    
+        try :
+            if self.__connection :
+                self.__cursor = self.__connection.cursor()
+        except Exception as err : 
+            pass
+
     def close_connection(self) :
         if self.__connection :
             self.__connection.close()
@@ -94,7 +104,34 @@ class MySQL_connection:
     @property
     def cursor(self):
         return self.__cursor
+    
+    @property
+    def hostname(self):
+        return self.__hostname
 
+    @property
+    def username(self):
+        return self.__username
+
+    @property
+    def pwd(self):
+        return self.__pwd
+
+    @property
+    def port(self):
+        return self.__port
+
+    @property
+    def db(self):
+        return self.__db
+
+    @property
+    def auth_plugin(self):
+        return self.__auth_plugin
+    @property
+    def connected(self):
+        return self.__connected
+    
 class MySQL_Manager:
     def __init__(self, connection , cursor) :
         self.__connection = connection 
@@ -498,8 +535,3 @@ class MySQL_Manager:
 
         except Exception as err:
             messagebox.showerror(title='Error', message=err)
-
-
-
-
-# mysqll = MySQL_connection ("localhost", "root", "root", port=3306, db=None, auth_plugin='mysql_native_password')
