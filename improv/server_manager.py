@@ -84,7 +84,7 @@ class MySQL_connection:
 
     def mysql_cursor(self):
         try :
-            if self.__connection :
+            if self.__connected :
                 self.__cursor = self.__connection.cursor()
         except Exception as err : 
             pass

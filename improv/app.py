@@ -113,9 +113,49 @@ class LoginPage:
         if self.__con.connected == True :
             self.__frame.destroy()
             self.__app.unbind("<Return>")
+            main_page(self.__app , self.__con)
             del self
+            
+# mysql_native_password
+class main_page:
+    def __init__(self,app,con) -> None:
+        self.__app = app
+        self.__con = con.connection
+        self.__cursor = con.cursor
+        self.__manager = MySQL_Manager(self.__con,self.__cursor)
+        self.__menu_frame = CTkScrollableFrame(master=self.__app)
+        self.__menu_frame.grid(row=0, column=0 , sticky="ns")
+        self.__app.grid_rowconfigure(0, weight=1) 
 
+        self.__new_db = tk.StringVar()
+        self.__db_create_entry = ttk.Entry(self.__menu_frame, textvariable=self.__new_db )
+        self.__db_create_entry.pack(pady=(60,0)) 
 
-
+        self.__create_database_button = ttk.Button(self.__menu_frame,text="Create a new Database" ,command=lambda:(self.__menu_frame.update_idletasks() if self.__manager.create_database(self.__new_db.get()) else None))
+        self.__create_database_button.pack(side="top", pady=(10,40))
         
+        self.__databases = self.__manager.show_databases()
+        self.__databases_buttons = [ttk.Button(self.__menu_frame,text=database  ).pack(fill='both',side="top", pady=10) for database in self.__databases]
+#  command=lambda db=database: tables_frame(self.__menu_frame,db[0])
+        # nte =Notebook(self.__app)
+        # nte.add_tab("testing_tab")
+class Notebook:
+    def __init__(self,master) -> None:
+        self.__master = master
+        self.__tabs = {}  # Dictionary to store tabs
+        self.__notebook = ttk.Notebook(self.__master)
+        self.__notebook.grid(row=0, column=1 , sticky="nswe" , padx=10 , pady=10)
+        self.__master.grid_columnconfigure(1, weight=1) 
+        self.__master.grid_rowconfigure(0, weight=1)
+
+    def add_tab(self,tab_name):
+        self.__tabs[tab_name] = ttk.Frame(self.__notebook)
+        self.__tabs[tab_name].pack(fill="both", expand=True)
+        self.__notebook.add(self.__tabs[tab_name] , text=tab_name)
+
+    def __del__(self):
+        for tab in self.__tabs.values():
+            tab.destroy()
+        self.__notebook.destroy()
+        del self
 App()
