@@ -53,16 +53,16 @@ data_structure = {
 class MySQL_connection:
 
     def __init__(self, hostname, username, pwd, port, auth_plugin , db=None):
-        self.__hostname = hostname
-        self.__username = username
-        self.__pwd = pwd
+        self.__hostname = "localhost"
+        self.__username = "root"
+        self.__pwd = "root"
         self.__db = db
         if port == "":
             self.__port = 3306
         else :
             self.__port = port
         if auth_plugin == "":
-            self.__auth_plugin = ''
+            self.__auth_plugin = 'mysql_native_password'
         else :
             self.__auth_plugin = auth_plugin
         self.connect()
@@ -89,11 +89,11 @@ class MySQL_connection:
         except Exception as err : 
             pass
 
-    def close_connection(self) :
+    def kill_connection(self) :
         if self.__connection :
             self.__connection.close()
     
-    def close_cursor(self):
+    def kill_cursor(self):
         if self.__cursor:
             self.__cursor.close()
 
