@@ -410,8 +410,10 @@ class MySQL_Manager:
             process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             process.communicate(input=query)
             self.drop_db(database)
+            return True
         except Exception as err:
             messagebox.showerror(title='Error' , message=err) 
+            return False
 
     """Insert row into table"""
     def insert_into_table(self ,table , new_values , columns):
@@ -422,6 +424,12 @@ class MySQL_Manager:
         insert_query = f"INSERT INTO {table} ({insert_column}) VALUES ({insert_values});"
         self.exec_sql_commit(insert_query)
 
+    def update_row(self,table , values , columns , key_val_couple):
+        values = [f"'{i}'" if  i is not None else 'NULL' for i in values]
+        set_clause = ', '.join([f"{column} = {value}" for column, value in zip(columns, values)])
+        where_clause = ' AND '.join([f"{key} = '{value}'" for key,value in key_val_couple])
+        update_query = f"UPDATE {table} SET {set_clause} WHERE {where_clause};"
+        self.exec_sql_commit(update_query)
     """Get the Foreign keys in a table (the columns)"""
     def fk_in_table(self ,database , table):
         # to get the foreign keys in a table (the one to whom the record belongs) 

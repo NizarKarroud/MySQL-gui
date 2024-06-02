@@ -154,7 +154,7 @@ class main_page:
         self.__con = MySQL_connection(self.__hostname , self.__username , self.__password , self.__port , self.__auth , db)
         self.__cursor = self.__con.cursor
 
-        self.__manager = MySQL_Manager(self.__con,self.__cursor)
+        self.__manager = MySQL_Manager(self.__con.connection,self.__cursor)
 
         self.__nte.add_tab("Tables","Canvas")
         self.__inner_frame = CTkScrollableFrame(self.__nte.tabs["Tables"] )
@@ -172,6 +172,38 @@ class main_page:
         self.__exec_button.pack(pady=(10,30),padx=20 , side='right')
 
         self.__nte.add_tab("Operations","Frame")
+
+        self.__create_table_frame = ttk.Frame(self.__nte.tabs["Operations"], borderwidth=10, relief="solid", height=100)
+        self.__create_table_frame.pack(fill='x', padx=10, pady=(30, 0) , ipady=70)
+
+        self.__table_name_label =ttk.Label(self.__create_table_frame , text='Create new Table Page' ,font=('Helvetica', 14))
+        self.__table_name_label.pack(side='left' ,padx=100)
+        # button to get to the table creation page
+        self.__create_table_button =ttk.Button(self.__create_table_frame , text="Create new Table " )
+        self.__create_table_button.pack(side='left' ,padx=100)
+
+# , command=lambda:table_create_page()
+        self.__rename_frame = ttk.Frame(self.__nte.tabs["Operations"], borderwidth=10, relief="solid", height=100)
+        self.__rename_frame.pack(fill='x', padx=10, pady=(30, 0) , ipady=70)
+
+        self.__new_name = tk.StringVar()
+        self.__new_name_entry = ttk.Entry(self.__rename_frame, textvariable=self.__new_name, width=60)
+        self.__new_name_entry.pack(side='left', padx=50)
+
+        self.__rename_database_button = ttk.Button(self.__rename_frame, text="Rename Database", width=50 ,command=lambda : (self.__menu_frame.destroy(), self.Databases_Menu()) if self.__manager.rename_database(db ,self.__con.hostname ,self.__con.username ,self.__con.pwd , self.__new_name.get()) else None)
+        self.__rename_database_button.pack(side='right', padx=50)
+
+
+        self.__drop_database_frame = ttk.Frame(self.__nte.tabs["Operations"], borderwidth=10, relief="solid", height=100)
+        self.__drop_database_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=70)
+
+        self.__drop_label = ttk.Label(self.__drop_database_frame, text="Drop Database " , font=('Helvetica' , 12))
+        self.__drop_label.pack(side='left',pady=10 , padx =30)
+
+        self.__drop_database_button = ttk.Button(self.__drop_database_frame, text="Drop Database ", width=40 ,command=lambda: (self.__menu_frame.destroy(), self.Databases_Menu()) if self.__manager.drop_db(db) else None)
+        self.__drop_database_button.pack(side='left',pady=10 , padx =60)
+        
+
         self.__nte.add_tab("Search","Frame")
         self.__nte.add_tab("Copy Database","Frame")
         self.__nte.add_tab("Export","Frame")
