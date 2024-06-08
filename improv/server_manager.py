@@ -261,13 +261,12 @@ class MySQL_Manager:
         """
         results = self.exec_sql_fetch(make_db_search_queries)
 
-        final_result = []
         item_counter = Counter()
 
         for row in results:
             select_statement = row[0].strip(" \" ") + ";"
 
-            select_results = self.exec_sql_fetch(make_db_search_queries)
+            select_results = self.exec_sql_fetch(select_statement)
             item_counter.update(select_results)
         return list(item_counter.items())
 
@@ -299,52 +298,54 @@ class MySQL_Manager:
 
         return(header , rows)
 
-    # def sql_dump(self , path , table=None, *args):
-    #         # Start building the command with basic arguments
-    #     command = ['mysqldump', '-h', hostname, '-u', username, f'-p{password}']
+    def sql_dump(self, path, db, table=None, **kwargs):
+        hostname = kwargs.get('hostname')
+        username = kwargs.get('username')
+        password = kwargs.get('password')
 
-    #     # Add optional options based on the specified arguments
-    #     for arg in args[0]:
-    #         command.append(arg)
+        # Ensure password is correctly passed without spaces
+        command = ['mysqldump', '-h', hostname, '-u', username, f'-p{password}']
 
-    #     # Append the database name at the end
-    #     command.append(db)
+        # Add optional options based on the specified arguments
+        additional_args = kwargs.get('additional_args', [])
+        if isinstance(additional_args, list):
+            command.extend(additional_args)
 
-    #     if table :
-    #         command.append(table)
+        # Append the database name at the end
+        command.append(db)
 
-    #     try:
-    #         # Open the output file in write mode
-    #         with open(path, 'w') as output_file:
-    #             # Open MySQL shell using subprocess
-    #             mysql_process = subprocess.Popen(
-    #                 command,
-    #                 stdout=output_file,  # Redirect stdout to the output file
-    #                 stderr=subprocess.PIPE,  # Capture stderr for error handling
-    #                 universal_newlines=True
-    #             )
-
-    #             # Wait for the process to finish and get the stderr output
-    #             _, error = mysql_process.communicate()
-
-    #             if error:
-    #                 return error
-
-    #     except Exception as err:
-    #         messagebox.showerror(title='Error' , message=err) 
-
-
-    # def sql_import(self , path):
-        try:
-            # Read SQL file content
-            with open(path, 'r') as sql_file:
-                sql_script = sql_file.read()
+        if table:
+            command.append(table)
         
-            # Execute the SQL script
-            self.exec_sql_commit(sql_script , multi=True)
+        file_name = f"{db}_{table}.sql" if table else f"{db}.sql"
+        file_path = os.path.join(path, file_name)
+        try:
+            # Open the output file in write mode
+            with open(file_path, 'w') as output_file:
+                # Open MySQL shell using subprocess
+                mysql_process = subprocess.Popen(
+                    command,
+                    stdout=output_file,  # Redirect stdout to the output file
+                    stderr=subprocess.PIPE,  # Capture stderr for error handling
+                    universal_newlines=True
+                )
+
+
 
         except Exception as err:
-            messagebox.showerror(title='Error' , message=err) 
+            messagebox.showerror(title='Error', message=str(err))
+
+    # def sql_import(self , path):
+        # try:
+        #     # Read SQL file content
+        #     with open(path, 'r') as sql_file:
+        #         sql_script = sql_file.read()
+        
+        #     # Execute the SQL script
+        #     self.exec_sql_commit(sql_script , multi=True)
+
+        # except Exception as err:
+        #     messagebox.showerror(title='Error' , message=err) 
 
     def copy_db(self, database , current_db,hostname,username,password,*args):
         # CREATE

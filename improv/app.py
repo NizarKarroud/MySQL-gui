@@ -103,7 +103,6 @@ class LoginPage:
         self.__button_name = ttk.Button(master=self.__frame, text=title , style="Hyperlink.TButton" , command= lambda : self.save_theme_settings(title.split()[0].lower()) )
         self.__button_name.pack(anchor='w' , side='left' , pady=(80,10) , padx=padding)
 
-    
     def save_theme_settings(self ,theme_name):
         with open('theme_settings.json', 'w') as file:
             json.dump({'theme': theme_name}, file)
@@ -205,9 +204,14 @@ class main_page:
         
 
         self.__nte.add_tab("Search","Frame")
+        self.__db_search = Search_Page(self.__app, self.__manager ,"Database" ,db , self.__nte.tabs["Search"])
+
         self.__nte.add_tab("Copy Database","Frame")
         self.__nte.add_tab("Export","Frame")
+
         self.__nte.add_tab("SQL Dump","Frame")
+        self.__dump_db_page = SQL_Dump_Page(self.__nte.tabs["SQL Dump"] ,"Database", self.__manager , db ,self.__con.hostname, self.__con.username,self.__con.pwd )
+    
         self.__nte.add_tab("Import","Frame")
         self.__nte.add_tab("Triggers","Frame")
 
@@ -216,28 +220,77 @@ class main_page:
         self.__result = self.__manager.exec_query(query)
         if isinstance(self.__result, tuple):  # Check if result is a tuple (indicating data query)
             self.__columns, self.__rows = self.__result
-            self.__window = tk.Toplevel(self.__app)
-            self.__window.geometry("800x600")
-            self.__window.title("View Search Results")
+            self.__query_window= Second_window(self.__app ,"800x600" , "View Query Results")
 
-            self.__query_tree = Records(self.__window , self.__rows , self.__columns)
+            self.__query_tree = Records(self.__query_window.window , self.__rows , self.__columns , "Table")
         elif self.__result ==True :
             messagebox.showerror(message="Executed successfully")
 
     def table_notebook(self , db , table):
         self.__nte =Notebook(self.__app)
+
         self.__nte.add_tab("Records","Frame")
         self.__columns , self.__rows , self.__prim_keys = self.__manager.show_table_records(table)
-        self.__query_tree = Records(self.__nte.tabs["Records"] , self.__rows , self.__columns)
+        self.__query_tree = Records(self.__nte.tabs["Records"] , self.__rows , self.__columns , "Table")
+
         self.__nte.add_tab("Search","Frame")
+        self.__db_search = Search_Page(self.__app, self.__manager ,"Table" ,db , self.__nte.tabs["Search"] , table)
+
         self.__nte.add_tab("Insert","Frame")
+
         self.__nte.add_tab("Operations","Frame")
+
         self.__nte.add_tab("SQL Dump","Frame")
+        self.__dump_table_page = SQL_Dump_Page(self.__nte.tabs["SQL Dump"] ,"Table", self.__manager , db,self.__con.hostname, self.__con.username,self.__con.pwd ,table)
+
         self.__nte.add_tab("Visualize Data","Frame")
+        self.__visualize_label = ttk.Label(self.__nte.tabs["Visualize Data"] ,text='Visualize Column Data' , font=('Helvetica' , 20))
+        self.__visualize_label.pack(side='top' , pady=20 )
+    
+        self.__visualized_column = tk.StringVar()
+        self.__column_list = ttk.Combobox(self.__nte.tabs["Visualize Data"], textvariable=self.__visualized_column , values=self.__columns , width=30 ,state='readonly' )
+        self.__column_list.pack(side='top' , pady=20 )
+        self.__column_list.bind("<<ComboboxSelected>>" , lambda event : update_plots())
 
+        self.__plots_to_visualize = tk.StringVar()
+        self.__plots_combobox = ttk.Combobox(self.__nte.tabs["Visualize Data"],textvariable=self.__plots_to_visualize, width=30 , values=[] , state='readonly')  
+        self.__plots_combobox.pack(side='top' , pady=20 )
+        self.__plots_combobox.bind("<<ComboboxSelected>>" , lambda event : update_measures())
 
+        self.__statistical_measure = tk.StringVar()
+        self.__statistical_measure_combobox = ttk.Combobox(self.__nte.tabs["Visualize Data"],textvariable=self.__statistical_measure, width=30 , values=[] , state='readonly')  
+        self.__statistical_measure_combobox.pack(side='top' , pady=20 )
 
+        visualize_button = ttk.Button(self.__nte.tabs["Visualize Data"] , text='Create' , command= lambda :self.__manager.generate_plot(plots[2] ,self.__plots_to_visualize.get(), self.__statistical_measure.get()))
+        visualize_button.pack(side='top' , pady=20 )
+        
+        plots = None
+        def update_measures():
+            measures = self.__manager.get_possible_measures( self.__plots_to_visualize.get(), plots[0])
+            self.__tatistical_measure_combobox.config(values=measures)
 
+        def update_plots():
+            nonlocal plots
+            plots = self.__manager.get_possible_plots(table , self.__visualized_column.get())
+            self.__plots_combobox.config(values=plots[1])
+class Second_window:
+    def __init__(self, master ,size , title):
+        self.__master = master
+        self.__size = size 
+        self.__title = title
+        self.set_window()
+
+    def set_window(self):
+        self.__window = tk.Toplevel(self.__master)
+        self.__window.geometry(self.__size)
+        self.__window.title(self.__title)       
+        
+    def del_win(self):
+        self.__window.destroy()
+
+    @property
+    def window(self):
+        return self.__window
 class Notebook:
     _instances = []
 
@@ -274,7 +327,7 @@ class Notebook:
         return self.__tabs
 
 class Records:
-    def __init__(self , master , rows ,columns) -> None:
+    def __init__(self , master , rows ,columns , record_type) -> None:
         self.__treeframe = ttk.Frame(master)
         self.__treeframe.pack(expand=True , fill='both')
 
@@ -295,17 +348,137 @@ class Records:
             self.__treeview.column(column, anchor="center")
             self.__treeview.heading(column , text=column)
 
-
     # Insert data into the treeview
-        for row in rows :
-            self.__treeview.insert("" , tk.END , values=row)
+        if record_type =="Search":
+            for row in rows :
+                inner_tuple, element = row[0], row[1]
+                inner_elements = [item for item in inner_tuple]
+                values_to_insert = inner_elements + [element]
+                self.__treeview.insert("" , tk.END , values=values_to_insert)
+        elif record_type =="Table" : 
+            for row in rows :
+                self.__treeview.insert("" , tk.END , values=row)
 
         self.__tree_y_Scrollbar.config(command=self.__treeview.yview)
         self.__tree_x_Scrollbar.config(command=self.__treeview.xview)
 
+class SQL_Dump_Page :
+    def __init__(self , master,type , manager , db , hostname,username,password , table=None) -> None:
+        self.__master = master
+        self.__type = type.title()
+        self.__manager = manager
+        self.__db = db 
+        self.__table = table
+        self.__hostname = hostname 
+        self.__username = username 
+        self.__password = password
+        self.create_page()
+
+    def create_page(self):
+        self.__dump_title = ttk.Label(self.__master , text=f'Dump {self.__type}' ,  font=("Helvetica",20))
+        self.__dump_title.grid(row=0, column=0, padx=10, pady=50, sticky="n")
+        self.__master.grid_rowconfigure(0, weight=1)
+        self.__master.grid_columnconfigure(0, weight=1)
+
+        self.__dump_label = ttk.Label(self.__master , text='Path : ' ,  font=("Helvetica",14))
+        self.__dump_label.grid(row=0, column=0, padx=50, pady=200, sticky="nw")
+
+        self.__dump_path= tk.StringVar()
+        self.__dump_path_entry = ttk.Entry(self.__master , textvariable=self.__dump_path , width=48)
+        self.__dump_path_entry.grid(row=0, column=0, padx=20, pady=200, sticky="n")
+
+        self.__dump_button = ttk.Button(
+            self.__master,
+            text='dump',
+            command=lambda: self.__manager.sql_dump(
+                self.__dump_path.get(),
+                self.__db,
+                self.__table,
+                hostname=self.__hostname,
+                username=self.__username,
+                password=self.__password,
+                additional_args=dump_arg(self.__var_struct_only, self.__var_data_only, self.__var_add_routines, self.__var_add_events)
+            )
+        )
+        self.__dump_button.grid(row=0, column=0, padx=20, pady=200, sticky="ne")
+
+        def browse_folder():
+            folder_selected = tk.filedialog.askdirectory()
+            self.__dump_path.set(folder_selected)
+            
+        self.__browse_button = ttk.Button(self.__master, text="Browse", command=browse_folder )
+        self.__browse_button.grid(row=0, column=0, padx=100, pady=200, sticky="ne") 
 
 
-class Table_page:
-    def __init__(self) -> None:
-        pass
+        self.__var_struct_data = tk.IntVar()
+        self.__var_struct_only = tk.IntVar()
+        self.__var_data_only = tk.IntVar()
+        self.__var_add_routines = tk.IntVar()
+        self.__var_add_events = tk.IntVar()
+
+        def dump_arg(var_struct_only, var_data_only, var_add_routines , var_add_events):
+            options = []
+            if var_struct_only.get() == 1:
+                options.append("--no-data") 
+            if var_data_only.get() == 1:
+                options.append("--no-create-info") 
+            if var_add_routines.get() == 1:
+                options.append("--routines")
+            if var_add_events.get() == 1:
+                options.append("--events")  
+
+            return options
+
+        def deselect_when_selected(*args):
+            for arg in args :
+                arg.deselect()
+
+        self.__struct_data = tk.Checkbutton(self.__master , text="Structure and data" ,variable=self.__var_struct_data, command=lambda : deselect_when_selected(self.__struct_only , self.__data_only))
+        self.__struct_data.grid(row=0 , column=0 , padx=100, pady=(10,10), sticky='w')
+
+        self.__struct_only = tk.Checkbutton(self.__master  , text="Structure only", variable=self.__var_struct_only, command=lambda : deselect_when_selected(self.__struct_data , self.__data_only))
+        self.__struct_only.grid(row=0 , column=0 , padx=100, pady=(60,10), sticky='w')
+
+        self.__data_only = tk.Checkbutton(self.__master , text="Data Only",variable=self.__var_data_only,command=lambda : deselect_when_selected(self.__struct_data , self.__struct_only))
+        self.__data_only.grid(row=0 , column=0 , padx=100, pady=(130 ,35), sticky='w')
+
+        self.__add_routines = tk.Checkbutton(self.__master ,variable=self.__var_add_routines, text="Add Routines")
+        self.__add_routines.grid(row=0 , column=0 , padx=100, pady=(180,10), sticky='w')
+
+        self.__add_events = tk.Checkbutton(self.__master ,variable=self.__var_add_events, text="Add Events")
+        self.__add_events.grid(row=0 , column=0 , padx=100, pady=(220, 10), sticky='w')
+class Search_Page:
+    def __init__(self ,app ,manager ,type , db ,master ,table=None ) -> None:
+        self.__type = type.title() 
+        self.__master = master
+        self.__manager = manager
+        self.__app = app
+        self.__db = db
+        self.__table = table
+        self.create()
+    def create(self):
+        self.__search_title_label = ttk.Label(self.__master , text=f'Search in {self.__type}' , font=("Helvetica",24))
+        self.__search_title_label.grid(row=0, column=0, padx=10, pady=50, sticky="n")
+        self.__master.grid_rowconfigure(0, weight=1)
+        self.__master.grid_columnconfigure(0, weight=1)
+
+        self.__search_label = ttk.Label(self.__master, text='Value to search for:', font=("Helvetica", 13))
+        self.__search_label.grid(row=0, column=0, padx=40, pady=300, sticky="nw")
+
+        self.__search_term = tk.StringVar()
+        self.__search_entry = ttk.Entry(self.__master, textvariable=self.__search_term, width=45 , justify='center')
+        self.__search_entry.grid(row=0, column=0, padx=10, pady=300, sticky="n")
+        self.__search_button = ttk.Button(self.__master, text='Search', width=25, command=lambda: self.search())
+        self.__search_button.grid(row=0, column=0, padx=40, pady=300, sticky="ne")
+    
+    def search(self):
+        self.__search_window = Second_window(self.__app, "800x600","View Search Results")
+        if self.__type == "Database": 
+            self.__search_tree = Records(self.__search_window.window ,self.__manager.search_database(self.__db, self.__search_term.get()) , ['Table' , 'Column' , 'matches'], "Search")
+        else :
+            self.__columns , self.__rows = self.__manager.search_table(self.__search_term.get() , self.__db, self.__table)
+            self.__search_tree = Records(self.__search_window.window , self.__rows , self.__columns , "Table")
+
+
+
 App()
