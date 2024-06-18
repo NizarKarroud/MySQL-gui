@@ -335,17 +335,17 @@ class MySQL_Manager:
         except Exception as err:
             messagebox.showerror(title='Error', message=str(err))
 
-    # def sql_import(self , path):
-        # try:
-        #     # Read SQL file content
-        #     with open(path, 'r') as sql_file:
-        #         sql_script = sql_file.read()
+    def sql_import(self , path):
+        try:
+            # Read SQL file content
+            with open(path, 'r') as sql_file:
+                sql_script = sql_file.read()
         
-        #     # Execute the SQL script
-        #     self.exec_sql_commit(sql_script , multi=True)
+            # Execute the SQL script
+            self.exec_sql_commit(sql_script , multi=True)
 
-        # except Exception as err:
-        #     messagebox.showerror(title='Error' , message=err) 
+        except Exception as err:
+            messagebox.showerror(title='Error' , message=err) 
 
     def copy_db(self, database , current_db,hostname,username,password,*args):
         # CREATE
@@ -361,7 +361,6 @@ class MySQL_Manager:
 
         # Append the database name at the end
         command.append(current_db)
-
         try :
             mysql_process = subprocess.Popen(
                 command,
@@ -373,12 +372,13 @@ class MySQL_Manager:
             # store the output in a variable
             query, error = mysql_process.communicate()
 
-            cmd = f"mysql -h {hostname} -u {username} -p{password} {database}"
-            process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            cmd =f"mysql -h {hostname} -u {username} -p{password} {database}"
+            process = subprocess.Popen(cmd,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             process.communicate(input=query)
-
+            return True
         except Exception as err:
-            messagebox.showerror(title='Error' , message=err) 
+            messagebox.showerror(title='Error' , message=err)
+            return False
 
     def rename_table(self,table , new_name):
         sql = f"ALTER TABLE {table} RENAME TO {new_name};"
