@@ -144,7 +144,7 @@ def get_prim_keys(cursor,table):
         messagebox.showerror(title='Error' , message=err) 
 
 
-def alter_table(db_name , table, values , columns,key_val_couple):
+def alter_table(db_name , table, values , columns, key_val_couple ):
     try :
 
         values = [f"'{i}'" if  i is not None else 'NULL' for i in values]

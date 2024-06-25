@@ -39,7 +39,7 @@ Welcome to the MySQL Administration GUI Application! This application is designe
 2. Navigate to the cloned directory
    
        ```bash
-       cd MySQL-gui
+       cd MySQL-gui/working_version
 
 3. Prerequisites
    - Python (version >= 3.6)

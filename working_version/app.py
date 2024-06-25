@@ -236,27 +236,29 @@ def tables_frame(menu_frame , db_name):
     table_frame = tk.Canvas(master=notebook )
     table_frame.pack(fill="both" , expand=True)
 
-    y_Scrollbar = ttk.Scrollbar(table_frame , orient="vertical")
-    y_Scrollbar.pack(side="right",fill="y")
+    # y_Scrollbar = ttk.Scrollbar(table_frame , orient="vertical")
+    # y_Scrollbar.pack(side="right",fill="y")
 
-    table_frame.config(yscrollcommand=y_Scrollbar.set)
-    y_Scrollbar.config(command=table_frame.yview)
+    # table_frame.config(yscrollcommand=y_Scrollbar.set)
+    # y_Scrollbar.config(command=table_frame.yview)
 
-    inner_frame = tk.Frame(table_frame )
-    table_frame.create_window((0, 0) , window=inner_frame, anchor='center' )
+    inner_frame = CTkScrollableFrame(table_frame )
+    inner_frame.pack(fill="both" , expand=True)
+
+    # table_frame.create_window((0, 0) , window=inner_frame, anchor='center' )
 
 
     tables = show_db_tables(db_name)
     tables_buttons = [ttk.Button(inner_frame,text=table, command=lambda table=table[0] : db_to_tb(db_name ,notebook,table)).pack(side='top',anchor='center' , fill='x', padx=220, pady=10 ) for table in tables]
 
-    inner_frame.update_idletasks()
-    table_frame.config(scrollregion=table_frame.bbox("all"))
+    # inner_frame.update_idletasks()
+    # table_frame.config(scrollregion=table_frame.bbox("all"))
 
-    # Bind the canvas scrolling to mousewheel events
-    def _on_mousewheel(event):
-        table_frame.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    # # Bind the canvas scrolling to mousewheel events
+    # def _on_mousewheel(event):
+    #     table_frame.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-    table_frame.bind_all("<MouseWheel>", _on_mousewheel)
+    # table_frame.bind_all("<MouseWheel>", _on_mousewheel)
     notebook.add(table_frame , text='Tables')
 
     sql_frame = ttk.Frame(notebook)
@@ -298,7 +300,6 @@ def tables_frame(menu_frame , db_name):
     drop_label = ttk.Label(drop_database_frame, text="Drop Database " , font=('Helvetica' , 12))
     drop_label.pack(side='left',pady=10 , padx =30)
 
-    # i need to reset the menu frame
     drop_database_button = ttk.Button(drop_database_frame, text="Drop ", width=40, command= lambda : drop_db(menu_frame , db_name))
     drop_database_button.pack(side='left',pady=10 , padx =60)
 
@@ -471,6 +472,13 @@ def tables_frame(menu_frame , db_name):
 
     dump_button = ttk.Button(sql_dump_frame , text='dump' ,command=lambda : mysql_con.sql_dump(dump_path.get() , dump_arg(var_struct_only, var_data_only, var_add_routines , var_add_events) ))
     dump_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
+    def browse_folder():
+        folder_selected = tk.filedialog.askdirectory()
+        dump_path.set(folder_selected)
+        
+    browse_button = tk.Button(sql_dump_frame, text="Browse", command=browse_folder)
+    browse_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
+
 
     var_struct_data = tk.IntVar()
     var_struct_only = tk.IntVar()
@@ -895,34 +903,6 @@ def table_tabs(db_name , table):
     operations_frame = ttk.Frame(notebook)
     operations_frame.pack(expand=True ,fill='both')
 
-    rename_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
-    rename_frame.pack(fill='x', padx=10, pady=(20, 0) , ipady=40)
-
-    new_name = tk.StringVar()
-    new_name_entry = ttk.Entry(rename_frame, textvariable=new_name, width=60)
-    new_name_entry.pack(side='left', padx=50)
-
-    rename_table_button = ttk.Button(rename_frame, text="Rename Table", width=50, command=lambda : mysql_con.rename_table(table , new_name.get()))
-    rename_table_button.pack(side='right', padx=50)
-
-    empty_table = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
-    empty_table.pack(fill='x', padx=10, pady=(30, 0) , ipady=40)
-
-    empty_label = ttk.Label(empty_table, text="Empty Table Records " , font=('Helvetica' , 12))
-    empty_label.pack(side='left',pady=10 , padx =30 )
-
-    empty_table_button = ttk.Button(empty_table, text="Delete Records", width=40, command=lambda :mysql_con.empty_table(table))
-    empty_table_button.pack(side='left',pady=10 , padx =60)
-
-    drop_table_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
-    drop_table_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=40)
-
-    drop_label = ttk.Label(drop_table_frame, text="Delete Table " , font=('Helvetica' , 12))
-    drop_label.pack(side='left',pady=10 , padx =30)
-
-    drop_table_button = ttk.Button(drop_table_frame, text="Drop Table", width=40, command=lambda: mysql_con.delete_table(table))
-    drop_table_button.pack(side='left',pady=10 , padx =60) 
-    
     drop_column_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
     drop_column_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=40)
 

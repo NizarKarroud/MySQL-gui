@@ -197,7 +197,7 @@ class MySQL_Manager:
             if is_data_query:
                 result = self.__cursor.fetchall()
                 headers = [i[0] for i in self.__cursor.description]
-                return headers, result
+                return headers, result 
             else:
                 self.__connection.commit()  # Commit changes for INSERT, UPDATE, DELETE, etc.
                 return True 

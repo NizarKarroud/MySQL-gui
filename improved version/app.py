@@ -6,7 +6,6 @@ import ttkbootstrap
 import json
 import webbrowser
 
-
 frame_to_destroy = []
 
 class App :
@@ -115,6 +114,7 @@ class LoginPage:
             self.__app.unbind("<Return>")
             main_page(self.__app , self.__con , self.__hostname.get(),self.__username.get(),self.__password.get(), self.__port.get(), self.__auth.get())
             del self 
+
 class main_page:
     def __init__(self,app,con , hostname , username , password , port , auth_pluging) -> None:
         self.__app = app
@@ -170,29 +170,13 @@ class main_page:
 
         self.__nte.add_tab("Operations","Frame")
 
-        self.__create_table_operation = Operation(self.__nte.tabs["Operations"] , "Label" ,title ="Create new Table Page : " ,
-        padx=10, pady=(30,0) , ipady=60 , type_padx=100 , type_pady=(30,0) , bt_title="Create new Table" , bt_padx =100  , but_pady= (30,0) , command = ...)
+        self.__create_table_operation = Operation(self.__nte.tabs["Operations"] , "Label" ,title ="Create new Table Page : " , padx=10, pady=(30,0) , ipady=60 , type_padx=100 , type_pady=30 , bt_title="Create new Table" , bt_padx =100  , but_pady=30 )
+        
+        self.__rename_operation = Operation(self.__nte.tabs["Operations"] , "Entry" ,padx=10, pady=(30,0) , ipady=60 , type_padx=60 ,type_pady=30, bt_title="Rename Database" , bt_padx =50  , but_pady= 30 )
+        self.__rename_operation.set_button_command(lambda : (self.__menu_frame.destroy(), self.Databases_Menu()) if self.__manager.rename_database(db ,self.__con.hostname ,self.__con.username ,self.__con.pwd , self.__rename_operation.var.get()) else None)
 
-
-        # self.__rename_operation = Operation(self.__nte.tabs["Operations"] , "Entry" ,
-        # padx=10, pady=(30,0) , ipady=70 , type_padx=100 , type_pady=(30,0) , bt_title="Create new Table" , bt_padx =100  , but_pady= (30,0) , command = ...)
-
-        # self.__new_name = tk.StringVar()
-        # self.__new_name_entry = ttk.Entry(self.__rename_frame, textvariable=self.__new_name, width=60)
-        # self.__new_name_entry.pack(side='left', padx=50)
-
-        # self.__rename_database_button = ttk.Button(self.__rename_frame, text="Rename Database", width=50 ,command=lambda : (self.__menu_frame.destroy(), self.Databases_Menu()) if self.__manager.rename_database(db ,self.__con.hostname ,self.__con.username ,self.__con.pwd , self.__new_name.get()) else None)
-        # self.__rename_database_button.pack(side='right', padx=50)
-
-
-        self.__drop_database_frame = ttk.Frame(self.__nte.tabs["Operations"], borderwidth=10, relief="solid", height=100)
-        self.__drop_database_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=70)
-
-        self.__drop_label = ttk.Label(self.__drop_database_frame, text="Drop Database " , font=('Helvetica' , 12))
-        self.__drop_label.pack(side='left',pady=10 , padx =30)
-
-        self.__drop_database_button = ttk.Button(self.__drop_database_frame, text="Drop Database ", width=40 ,command=lambda: (self.__menu_frame.destroy(), self.Databases_Menu()) if self.__manager.drop_db(db) else None)
-        self.__drop_database_button.pack(side='left',pady=10 , padx =60)
+        self.__drop_database_operation = Operation(self.__nte.tabs["Operations"] , "Label" ,title ="Drop the Database " ,padx=10, pady=(30,0) , ipady=60 , type_padx=100 , type_pady=30 , bt_title="Drop" , bt_padx =100  , but_pady= 30 )
+        self.__drop_database_operation.set_button_command(lambda: (self.__menu_frame.destroy(), self.Databases_Menu()) if self.__manager.drop_db(db) else None)
 
         self.__nte.add_tab("Search","Frame")
         self.__db_search = Search_Page(self.__app, self.__manager ,"Database" ,db , self.__nte.tabs["Search"])
@@ -374,7 +358,6 @@ class main_page:
             parent_frame.grid_rowconfigure(i, weight=1)
         parent_frame.grid_columnconfigure(2, weight=1)  
     
-    
     def sql_query(self, query):
         self.__result = self.__manager.exec_query(query)
         if isinstance(self.__result, tuple):  # Check if result is a tuple (indicating data query)
@@ -390,10 +373,10 @@ class main_page:
 
         self.__nte.add_tab("Records","Frame")
         self.__columns , self.__rows , self.__prim_keys = self.__manager.show_table_records(table)
-        self.__query_tree = Records(self.__nte.tabs["Records"] , self.__rows , self.__columns , "Table")
+        self.__record_tree = Records(self.__nte.tabs["Records"] , self.__rows , self.__columns , "Table" , primary_keys = self.__prim_keys)
 
         self.__nte.add_tab("Search","Frame")
-        self.__db_search = Search_Page(self.__app, self.__manager ,"Table" ,db , self.__nte.tabs["Search"] , table)
+        self.__table_search = Search_Page(self.__app, self.__manager ,"Table" ,db , self.__nte.tabs["Search"] , table)
 
         self.__nte.add_tab("Insert","Frame")
         self.__canvas = tk.Canvas(self.__nte.tabs["Insert"])
@@ -454,8 +437,20 @@ class main_page:
 
         self.__canvas.bind("<Configure>", _center_frame)
 
-
         self.__nte.add_tab("Operations","Frame")
+
+        self.__rename_table_operation = Operation(self.__nte.tabs["Operations"] , "Entry" ,padx=10, pady=(20,0) , ipady=40 , type_padx=50 ,type_pady=20, bt_title="Rename Table" , bt_padx =50  , but_pady= 20 )
+        self.__rename_table_operation.set_button_command(lambda : self.__manager.rename_table(table , self.__rename_table_operation.var.get()))
+
+        self.__empty_table_operation = Operation(self.__nte.tabs["Operations"] , "Label" , title ="Empty Table Records "  ,padx=10, pady=(20,0) , ipady=40 , type_padx=50 ,type_pady=20, bt_title="Delete Records" , bt_padx =50  , but_pady= 20 )
+        self.__empty_table_operation.set_button_command(lambda : self.__manager.empty_table(table))
+        
+        self.__drop_table_operation = Operation(self.__nte.tabs["Operations"] , "Label" , title ="Drop Table "  ,padx=10, pady=(20,0) , ipady=40 , type_padx=50 ,type_pady=20, bt_title="Delete" , bt_padx =50  , but_pady= 20 )
+        self.__drop_table_operation.set_button_command(lambda : self.__manager.delete_table(table))
+
+        self.__drop_column_operation = Operation(self.__nte.tabs["Operations"] , "Combobox" , values =self.__columns  ,padx=10, pady=(20,0) , ipady=40 , type_padx=50 ,type_pady=20, bt_title="Drop Column" , bt_padx =50  , but_pady= 20 )
+        self.__drop_column_operation.set_button_command(lambda : self.__manager.drop_column(table , self.__drop_column_operation.var.get()))
+        
         self.__nte.add_tab("SQL Dump","Frame")
         self.__dump_table_page = SQL_Dump_Page(self.__nte.tabs["SQL Dump"] ,"Table", self.__manager , db,self.__con.hostname, self.__con.username,self.__con.pwd ,table)
 
@@ -495,9 +490,6 @@ class Second_window:
         self.__master = master
         self.__size = size 
         self.__title = title
-        self.set_window()
-
-    def set_window(self):
         self.__window = tk.Toplevel(self.__master)
         self.__window.geometry(self.__size)
         self.__window.title(self.__title)       
@@ -545,8 +537,12 @@ class Notebook:
         return self.__tabs
 
 class Records:
-    def __init__(self , master , rows ,columns , record_type) -> None:
-        self.__treeframe = ttk.Frame(master)
+    def __init__(self , master , rows ,columns , record_type ,**kwargs ) -> None:
+        self.__record_type = record_type
+        self.__primary_keys = kwargs["primary_keys"]
+        self.__master = master
+        # self.__search_term = kwargs["search_term"] 
+        self.__treeframe = ttk.Frame(self.__master)
         self.__treeframe.pack(expand=True , fill='both')
 
         # Add vertical scrollbar
@@ -567,28 +563,52 @@ class Records:
             self.__treeview.heading(column , text=column)
 
     # Insert data into the treeview
-        if record_type =="Search":
+        if self.__record_type =="Search":
             for row in rows :
                 inner_tuple, element = row[0], row[1]
                 inner_elements = [item for item in inner_tuple]
                 values_to_insert = inner_elements + [element]
                 self.__treeview.insert("" , tk.END , values=values_to_insert)
-        elif record_type =="Table" : 
+        elif self.__record_type =="Table" : 
             for row in rows :
                 self.__treeview.insert("" , tk.END , values=row)
 
         self.__tree_y_Scrollbar.config(command=self.__treeview.yview)
         self.__tree_x_Scrollbar.config(command=self.__treeview.xview)
-    #     self.__treeview.bind('<Double-1>', lambda event , headers=columns: self.click_on_row(db , treeframe,primary_key ,table_col_couple[0] , headers , treeview.item(treeview.selection())['values']))
+        self.__treeview.bind('<Double-1>', lambda event , headers=columns: self.click_on_row(self.__primary_keys , headers , self.__treeview.item(self.__treeview.selection())['values']))
     
-    # def click_on_row(self):
-    #     row_data = list(zip(headers,selected_row))
+    def click_on_row(self , primary_keys, headers , selected_row):
+        if self.__record_type =="Table":
+            row_data = list(zip(headers,selected_row))
+            keys_values_couples = []
+            for couple in row_data :
+                for key in primary_keys :
+                    if couple[0] == key :
+                        keys_values_couples.append(couple)
 
-    #     keys_values_couples = []
-    #     for couple in row_data :
-    #         for key in primary_keys :
-    #             if couple[0] == key :
-    #                 keys_values_couples.append(couple)
+            self.__result_table= Second_window(self.__master ,"800x600" , "View Table")
+
+            # entries = []
+            # for header, value in zip(headers, selected_row):
+            #     label = ttk.Label(self.___table_frame, text=header)
+            #     label.pack(side="top" , pady=10 )
+
+            #     entry_var = tk.StringVar(value=value)
+            #     print(value)
+            #     entry = ttk.Entry(self.___table_frame, textvariable=entry_var)
+            #     entry.insert(0, value)  
+            #     entry.placeholder = value 
+            #     entry.pack(side="top" )
+
+            #     entries.append(entry_var)
+
+
+        # if self.__record_type == "Search" :
+        #     print(headers , selected_row)
+        #     self.__column_search= Second_window(self.__master ,"800x600" , "View Column")
+        #     self.__column_tree = Records(self.__column_search.window,  , [selected_row[1]] , "Table")
+            
+
 class SQL_Dump_Page :
     def __init__(self , master,type , manager , db , hostname,username,password , table=None) -> None:
         self.__master = master
@@ -702,28 +722,33 @@ class Search_Page:
     def search(self):
         self.__search_window = Second_window(self.__app, "800x600","View Search Results")
         if self.__type == "Database": 
-            self.__search_tree = Records(self.__search_window.window ,self.__manager.search_database(self.__db, self.__search_term.get()) , ['Table' , 'Column' , 'matches'], "Search")
+            self.__search_tree = Records(self.__search_window.window ,self.__manager.search_database(self.__db, self.__search_term.get()) , ['Table' , 'Column' , 'matches'], "Search" , search_term = self.__search_term.get())
         else :
             self.__columns , self.__rows = self.__manager.search_table(self.__search_term.get() , self.__db, self.__table)
             self.__search_tree = Records(self.__search_window.window , self.__rows , self.__columns , "Table")
-
+    
 class Operation:
     def __init__(self, master , type  , **kwargs) -> None:
         self.__frame = ttk.Frame(master, borderwidth=10, relief="solid", height=60)
         self.__frame.pack(fill='x', padx=kwargs["padx"], pady=kwargs["pady"] , ipady=kwargs["ipady"])
+        self.__var = tk.StringVar()
 
         if type == "Label":
             self.__label = ttk.Label(self.__frame, text=kwargs["title"] , font=('Helvetica' , 12))
             self.__label.pack(side='left',pady=kwargs["type_pady"] , padx =kwargs["type_padx"])        
         elif type == "Entry":
-            self.__var = tk.StringVar()
             self.__entry = ttk.Entry(self.__frame, textvariable=self.__var, width=60)
-            self.__entry.pack(side='left', padx=kwargs["type_padx"])
+            self.__entry.pack(side='left', pady=kwargs["type_pady"], padx=kwargs["type_padx"])
         elif type == "Combobox" :
-            self.__combo_var = tk.StringVar()
-            self.__combobox = ttk.Combobox(self.__frame, textvariable=self.__combo_var,  values=kwargs["values"] , width=30 , state='readonly')
+            self.__combobox = ttk.Combobox(self.__frame, textvariable=self.__var,  values=kwargs["values"] , width=30 , state='readonly')
             self.__combobox.pack(side='left',pady=kwargs["type_pady"] , padx =kwargs["type_padx"])
-    
-        self.__button = ttk.Button(self.__frame, text=kwargs["bt_title"] ,width=50, command=lambda : kwargs["command"])
+        
+        self.__button = ttk.Button(self.__frame, text=kwargs["bt_title"] ,width=50)
         self.__button.pack(side='right', padx=kwargs["bt_padx"] , pady=kwargs["but_pady"])
+        
+    def set_button_command(self, command):
+        self.__button.configure(command=command)
+    @property
+    def var(self) :
+        return self.__var
 App()
