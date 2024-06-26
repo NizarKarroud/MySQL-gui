@@ -165,7 +165,7 @@ class main_page:
         self.__text_box = tk.Text(self.__nte.tabs["SQL"])
         self.__text_box.pack(padx=20 , pady= (20,10) ,fill='both' , expand=True)
 
-        self.__exec_button = ttk.Button(self.__nte.tabs["SQL"], text='Execute' , command= lambda : self.sql_query(self.__text_box.get(1.0, "end-1c")))
+        self.__exec_button = ttk.Button(self.__nte.tabs["SQL"], text='Execute' , command= lambda : self.sql_query(self.__text_box.get(1.0, "end-1c") ))
         self.__exec_button.pack(pady=(10,30),padx=20 , side='right')
 
         self.__nte.add_tab("Operations","Frame")
@@ -364,7 +364,7 @@ class main_page:
             self.__columns, self.__rows = self.__result
             self.__query_window= Second_window(self.__app ,"800x600" , "View Query Results")
 
-            self.__query_tree = Records(self.__query_window.window , self.__rows , self.__columns , "Table")
+            self.__query_tree = Records(self.__query_window.window , self.__rows , self.__columns , "Table" , manager= self.__manager , table=self._table)
         elif self.__result ==True :
             messagebox.showerror(message="Executed successfully")
 
@@ -373,7 +373,7 @@ class main_page:
 
         self.__nte.add_tab("Records","Frame")
         self.__columns , self.__rows , self.__prim_keys = self.__manager.show_table_records(table)
-        self.__record_tree = Records(self.__nte.tabs["Records"] , self.__rows , self.__columns , "Table" , primary_keys = self.__prim_keys)
+        self.__record_tree = Records(self.__nte.tabs["Records"] , self.__rows , self.__columns , "Table" , primary_keys = self.__prim_keys , manager= self.__manager , table = table)
 
         self.__nte.add_tab("Search","Frame")
         self.__table_search = Search_Page(self.__app, self.__manager ,"Table" ,db , self.__nte.tabs["Search"] , table)
@@ -537,11 +537,14 @@ class Notebook:
         return self.__tabs
 
 class Records:
-    def __init__(self , master , rows ,columns , record_type ,**kwargs ) -> None:
+    def __init__(self , master , rows ,columns , record_type  ,**kwargs ) -> None:
         self.__record_type = record_type
-        self.__primary_keys = kwargs["primary_keys"]
+        self.__primary_keys = kwargs.get("primary_keys", None)
+        self.__search_term = kwargs.get("search_term", None)  
+        self.__table = kwargs.get("table", None)  
         self.__master = master
-        # self.__search_term = kwargs["search_term"] 
+        self.__manager = kwargs.get("manager", None)
+
         self.__treeframe = ttk.Frame(self.__master)
         self.__treeframe.pack(expand=True , fill='both')
 
@@ -579,34 +582,53 @@ class Records:
     
     def click_on_row(self , primary_keys, headers , selected_row):
         if self.__record_type =="Table":
-            row_data = list(zip(headers,selected_row))
-            keys_values_couples = []
-            for couple in row_data :
-                for key in primary_keys :
-                    if couple[0] == key :
-                        keys_values_couples.append(couple)
-
             self.__result_table= Second_window(self.__master ,"800x600" , "View Table")
+            # Create a scrollable frame inside the window
+            scroll_frame = ttk.Frame(self.__result_table.window)
+            scroll_frame.pack(fill=tk.BOTH, expand=True)
 
-            # entries = []
-            # for header, value in zip(headers, selected_row):
-            #     label = ttk.Label(self.___table_frame, text=header)
-            #     label.pack(side="top" , pady=10 )
+            # Add a canvas to make the frame scrollable
+            canvas = tk.Canvas(scroll_frame)
+            canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-            #     entry_var = tk.StringVar(value=value)
-            #     print(value)
-            #     entry = ttk.Entry(self.___table_frame, textvariable=entry_var)
-            #     entry.insert(0, value)  
-            #     entry.placeholder = value 
-            #     entry.pack(side="top" )
+            # Add a scrollbar
+            scrollbar = ttk.Scrollbar(scroll_frame, orient=tk.VERTICAL, command=canvas.yview)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            canvas.configure(yscrollcommand=scrollbar.set)
 
-            #     entries.append(entry_var)
+            inner_frame = ttk.Frame(canvas)
+            canvas.create_window((0, 0), window=inner_frame, anchor=tk.NW)
 
+            # Populate the inner frame with entry widgets (table columns )
+            entries = []
+            for header, value in zip(headers, selected_row):
+                label = ttk.Label(inner_frame, text=header)
+                label.pack(padx=300, pady=5)
 
-        # if self.__record_type == "Search" :
-        #     print(headers , selected_row)
-        #     self.__column_search= Second_window(self.__master ,"800x600" , "View Column")
-        #     self.__column_tree = Records(self.__column_search.window,  , [selected_row[1]] , "Table")
+                entry_var = tk.StringVar(value=value)
+                entry = ttk.Entry(inner_frame, textvariable=entry_var)
+                entry.pack(padx=300, pady=5 )
+
+                entries.append(entry_var)
+
+            # Function to update canvas scrolling region
+            def _configure_scroll_region(event):
+                canvas.configure(scrollregion=canvas.bbox("all"))
+
+            inner_frame.bind("<Configure>", _configure_scroll_region)
+
+            # Add a button to submit the changes
+            submit_button = ttk.Button(inner_frame, text="Update", command=... )
+            submit_button.pack(padx=300, pady=10 )
+
+            delete_row_button = ttk.Button(inner_frame, text="Delete row ", command= self.__manager.delete_row(self.__table ,primary_keys))
+            delete_row_button.pack(padx=300, pady=10 )
+
+        if self.__record_type == "Search" :
+            self.__column_search= Second_window(self.__master ,"800x600" , "View Column")
+            table_col_couple = (selected_row[0], selected_row[1])
+            columns,rows,prim_key = self.__manager.show_search_records(table_col_couple , self.__search_term)
+            self.__column_tree = Records(self.__column_search.window,rows, columns, "Table" ,primary_keys = prim_key ,manager= self.__manager ,table =selected_row[0])
             
 
 class SQL_Dump_Page :
@@ -722,10 +744,11 @@ class Search_Page:
     def search(self):
         self.__search_window = Second_window(self.__app, "800x600","View Search Results")
         if self.__type == "Database": 
-            self.__search_tree = Records(self.__search_window.window ,self.__manager.search_database(self.__db, self.__search_term.get()) , ['Table' , 'Column' , 'matches'], "Search" , search_term = self.__search_term.get())
+            self.__search_tree = Records(self.__search_window.window ,self.__manager.search_database(self.__db, self.__search_term.get()) , ['Table' , 'Column' , 'matches'], "Search" , search_term = self.__search_term.get() , manager=self.__manager)
         else :
-            self.__columns , self.__rows = self.__manager.search_table(self.__search_term.get() , self.__db, self.__table)
-            self.__search_tree = Records(self.__search_window.window , self.__rows , self.__columns , "Table")
+            self.__columns , self.__rows = self.__manager.search_table(self.__search_term.get() , self.__db, self.__table) 
+            self.__primary_keys =self.__manager.get_prim_keys(self.__table)
+            self.__search_tree = Records(self.__search_window.window , self.__rows , self.__columns , "Table" , manager= self.__manager , primary_keys = self.__primary_keys , table = self.__table)
     
 class Operation:
     def __init__(self, master , type  , **kwargs) -> None:
