@@ -903,6 +903,34 @@ def table_tabs(db_name , table):
     operations_frame = ttk.Frame(notebook)
     operations_frame.pack(expand=True ,fill='both')
 
+    rename_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
+    rename_frame.pack(fill='x', padx=10, pady=(20, 0) , ipady=40)
+
+    new_name = tk.StringVar()
+    new_name_entry = ttk.Entry(rename_frame, textvariable=new_name, width=60)
+    new_name_entry.pack(side='left', padx=50)
+
+    rename_table_button = ttk.Button(rename_frame, text="Rename Table", width=50, command=lambda : mysql_con.rename_table(table , new_name.get()))
+    rename_table_button.pack(side='right', padx=50)
+
+    empty_table = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
+    empty_table.pack(fill='x', padx=10, pady=(30, 0) , ipady=40)
+
+    empty_label = ttk.Label(empty_table, text="Empty Table Records " , font=('Helvetica' , 12))
+    empty_label.pack(side='left',pady=10 , padx =30 )
+
+    empty_table_button = ttk.Button(empty_table, text="Delete Records", width=40, command=lambda :mysql_con.empty_table(table))
+    empty_table_button.pack(side='left',pady=10 , padx =60)
+
+    drop_table_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
+    drop_table_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=40)
+
+    drop_label = ttk.Label(drop_table_frame, text="Delete Table " , font=('Helvetica' , 12))
+    drop_label.pack(side='left',pady=10 , padx =30)
+
+    drop_table_button = ttk.Button(drop_table_frame, text="Drop Table", width=40, command=lambda: mysql_con.delete_table(table))
+    drop_table_button.pack(side='left',pady=10 , padx =60) 
+
     drop_column_frame = ttk.Frame(operations_frame, borderwidth=10, relief="solid", height=60)
     drop_column_frame.pack(fill='x', padx=10, pady=(30, 0),ipady=40)
 
