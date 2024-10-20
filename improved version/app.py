@@ -45,7 +45,7 @@ class LoginPage:
 
         self.__label = ttk.Label(master=self.__frame, text="Login" , font=("Roboto" , 30))
         self.__label.pack(padx=20 , pady=22)
-        
+
         self.__host_label = ttk.Label(master=self.__frame, text="Hostname :")
         self.__host_label.pack(pady=10)
 
@@ -98,7 +98,7 @@ class LoginPage:
            self.logging_in()
 
         self.__app.bind("<Return>", on_enter)
-    
+
     def theme_button(self , button_name , title , padding ) :
         self.__button_name = ttk.Button(master=self.__frame, text=title , style="Hyperlink.TButton" , command= lambda : self.save_theme_settings(title.split()[0].lower()) )
         self.__button_name.pack(anchor='w' , side='left' , pady=(80,10) , padx=padding)
@@ -113,7 +113,7 @@ class LoginPage:
             self.__frame.destroy()
             self.__app.unbind("<Return>")
             main_page(self.__app , self.__con , self.__hostname.get(),self.__username.get(),self.__password.get(), self.__port.get(), self.__auth.get())
-            del self 
+            del self
 
 class main_page:
     def __init__(self,app,con , hostname , username , password , port , auth_pluging) -> None:
@@ -132,18 +132,18 @@ class main_page:
     def Databases_Menu(self) :
         self.__menu_frame = CTkScrollableFrame(master=self.__app)
         self.__menu_frame.grid(row=0, column=0 , sticky="ns")
-        self.__app.grid_rowconfigure(0, weight=1) 
+        self.__app.grid_rowconfigure(0, weight=1)
 
         self.__new_db = tk.StringVar()
         self.__db_create_entry = ttk.Entry(self.__menu_frame, textvariable=self.__new_db )
-        self.__db_create_entry.pack(pady=(60,0)) 
+        self.__db_create_entry.pack(pady=(60,0))
 
         self.__create_database_button = ttk.Button(self.__menu_frame,text="Create a new Database" ,command=lambda:(self.__menu_frame.destroy(), self.Databases_Menu())  if self.__manager.create_database(self.__new_db.get()) else None)
         self.__create_database_button.pack(side="top", pady=(10,40))
-        
+
         self.__databases = self.__manager.show_databases()
         self.__databases_buttons = [ttk.Button(self.__menu_frame,text=database ,command=lambda db=database: self.databases_notebook(db[0])).pack(fill='both',side="top", pady=10) for database in self.__databases]
-  
+
     def databases_notebook(self,db):
         self.__nte =Notebook(self.__app)
         self.__con.kill_connection()
@@ -171,7 +171,7 @@ class main_page:
         self.__nte.add_tab("Operations","Frame")
 
         self.__create_table_operation = Operation(self.__nte.tabs["Operations"] , "Label" ,title ="Create new Table Page : " , padx=10, pady=(30,0) , ipady=60 , type_padx=100 , type_pady=30 , bt_title="Create new Table" , bt_padx =100  , but_pady=30 )
-        
+
         self.__rename_operation = Operation(self.__nte.tabs["Operations"] , "Entry" ,padx=10, pady=(30,0) , ipady=60 , type_padx=60 ,type_pady=30, bt_title="Rename Database" , bt_padx =50  , but_pady= 30 )
         self.__rename_operation.set_button_command(lambda : (self.__menu_frame.destroy(), self.Databases_Menu()) if self.__manager.rename_database(db ,self.__con.hostname ,self.__con.username ,self.__con.pwd , self.__rename_operation.var.get()) else None)
 
@@ -194,17 +194,17 @@ class main_page:
 
 
         self.__copy_button = ttk.Button(
-            self.__nte.tabs["Copy Database"] , 
+            self.__nte.tabs["Copy Database"] ,
             text='copy' ,
             command= lambda :(
                 (self.__menu_frame.destroy(), self.Databases_Menu())  if self.__manager.copy_db(
                     self.__db_copy_to.get() ,db , self.__con.hostname , self.__con.username , self.__con.pwd,
-                    get_args(self.__cp_struct.get() ,self.__cp_data.get()) ,self.__create_before.get() ) 
+                    get_args(self.__cp_struct.get() ,self.__cp_data.get()) ,self.__create_before.get() )
                     else None)
                     )
-        
+
         self.__copy_button.grid(row=1, column=0 , padx=550, pady=60, sticky='w')
-        
+
         def deselect_when_selected(*args):
             for arg in args :
                 arg.deselect()
@@ -216,9 +216,9 @@ class main_page:
         def get_args(cp_struct, cp_data ):
             options = []
             if cp_struct == 1:
-                options.append("--no-data") 
+                options.append("--no-data")
             if cp_data == 1:
-                options.append("--no-create-info") 
+                options.append("--no-create-info")
 
             return options
 
@@ -235,7 +235,7 @@ class main_page:
         self.__create_before_button.grid(row=2 , column=0 , padx=100, pady=(170,35), sticky='w')
 
         self.__nte.add_tab("Export","Frame")
-        
+
         self.__export_label = ttk.Label(self.__nte.tabs["Export"] , text="Export Database's Tables" , font=("Helvetica",20))
         self.__export_label.grid(row=0, column=0, padx=10, pady=50, sticky="n")
         self.__nte.tabs["Export"].grid_rowconfigure(0, weight=1)
@@ -247,7 +247,7 @@ class main_page:
         self.__path_var = tk.StringVar()
         self.__path_entry = ttk.Entry(self.__nte.tabs["Export"] , textvariable=self.__path_var , width=45)
         self.__path_entry.grid(row=0, column=0, padx=(5,160), pady=150, sticky="n")
-        
+
         self.__table_list_box = tk.Listbox(self.__nte.tabs["Export"], selectmode=tk.MULTIPLE , height=80 , width=40)
 
         self.__export_options = ['csv' , 'html']
@@ -279,12 +279,12 @@ class main_page:
 
         self.__nte.add_tab("SQL Dump","Frame")
         self.__dump_db_page = SQL_Dump_Page(self.__nte.tabs["SQL Dump"] ,"Database", self.__manager , db ,self.__con.hostname, self.__con.username,self.__con.pwd )
-    
+
         self.__nte.add_tab("Import","Frame")
 
         self.__import_title = ttk.Label(self.__nte.tabs["Import"] , text=f'Import into Database' , font=("Helvetica",24))
         self.__import_title.grid(row=0, column=0, padx=10, pady=50, sticky="n")
-        
+
         self.__nte.tabs["Import"].grid_rowconfigure(0, weight=1)
         self.__nte.tabs["Import"].grid_columnconfigure(0, weight=1)
 
@@ -297,16 +297,16 @@ class main_page:
 
         self.__import_button = ttk.Button(self.__nte.tabs["Import"], text='Import' , command=lambda: self.__manager.sql_import(self.__import_path.get()))
         self.__import_button.grid(row=0, column=0,padx=60, pady=300, sticky="ne")
-        
+
         def browse_file():
             file_selected = tk.filedialog.askopenfilename()
             self.__import_path.set(file_selected)
-            
+
         self.__browse_button = ttk.Button(self.__nte.tabs["Import"], text="Browse", command=browse_file )
-        self.__browse_button.grid(row=0, column=0, padx=150, pady=300, sticky="ne") 
+        self.__browse_button.grid(row=0, column=0, padx=150, pady=300, sticky="ne")
 
         self.__nte.add_tab("Triggers","Frame")
-       
+
         parent_frame = ttk.Frame(self.__nte.tabs["Triggers"])
         parent_frame.grid(row=0, column=0, padx=20, pady=20, sticky='nsew')
 
@@ -354,10 +354,10 @@ class main_page:
         self.__create_trigger.grid(row=5, column=1, sticky='e', padx=10, pady=20)
 
         # Add extra rows and columns to the parent frame for spacing
-        for i in range(6):  
+        for i in range(6):
             parent_frame.grid_rowconfigure(i, weight=1)
-        parent_frame.grid_columnconfigure(2, weight=1)  
-    
+        parent_frame.grid_columnconfigure(2, weight=1)
+
     def sql_query(self, query):
         self.__result = self.__manager.exec_query(query)
         if isinstance(self.__result, tuple):  # Check if result is a tuple (indicating data query)
@@ -444,37 +444,37 @@ class main_page:
 
         self.__empty_table_operation = Operation(self.__nte.tabs["Operations"] , "Label" , title ="Empty Table Records "  ,padx=10, pady=(20,0) , ipady=40 , type_padx=50 ,type_pady=20, bt_title="Delete Records" , bt_padx =50  , but_pady= 20 )
         self.__empty_table_operation.set_button_command(lambda : self.__manager.empty_table(table))
-        
+
         self.__drop_table_operation = Operation(self.__nte.tabs["Operations"] , "Label" , title ="Drop Table "  ,padx=10, pady=(20,0) , ipady=40 , type_padx=50 ,type_pady=20, bt_title="Delete" , bt_padx =50  , but_pady= 20 )
         self.__drop_table_operation.set_button_command(lambda : self.__manager.delete_table(table))
 
         self.__drop_column_operation = Operation(self.__nte.tabs["Operations"] , "Combobox" , values =self.__columns  ,padx=10, pady=(20,0) , ipady=40 , type_padx=50 ,type_pady=20, bt_title="Drop Column" , bt_padx =50  , but_pady= 20 )
         self.__drop_column_operation.set_button_command(lambda : self.__manager.drop_column(table , self.__drop_column_operation.var.get()))
-        
+
         self.__nte.add_tab("SQL Dump","Frame")
         self.__dump_table_page = SQL_Dump_Page(self.__nte.tabs["SQL Dump"] ,"Table", self.__manager , db,self.__con.hostname, self.__con.username,self.__con.pwd ,table)
 
         self.__nte.add_tab("Visualize Data","Frame")
         self.__visualize_label = ttk.Label(self.__nte.tabs["Visualize Data"] ,text='Visualize Column Data' , font=('Helvetica' , 20))
         self.__visualize_label.pack(side='top' , pady=20 )
-    
+
         self.__visualized_column = tk.StringVar()
         self.__column_list = ttk.Combobox(self.__nte.tabs["Visualize Data"], textvariable=self.__visualized_column , values=self.__columns , width=30 ,state='readonly' )
         self.__column_list.pack(side='top' , pady=20 )
         self.__column_list.bind("<<ComboboxSelected>>" , lambda event : update_plots())
 
         self.__plots_to_visualize = tk.StringVar()
-        self.__plots_combobox = ttk.Combobox(self.__nte.tabs["Visualize Data"],textvariable=self.__plots_to_visualize, width=30 , values=[] , state='readonly')  
+        self.__plots_combobox = ttk.Combobox(self.__nte.tabs["Visualize Data"],textvariable=self.__plots_to_visualize, width=30 , values=[] , state='readonly')
         self.__plots_combobox.pack(side='top' , pady=20 )
         self.__plots_combobox.bind("<<ComboboxSelected>>" , lambda event : update_measures())
 
         self.__statistical_measure = tk.StringVar()
-        self.__statistical_measure_combobox = ttk.Combobox(self.__nte.tabs["Visualize Data"],textvariable=self.__statistical_measure, width=30 , values=[] , state='readonly')  
+        self.__statistical_measure_combobox = ttk.Combobox(self.__nte.tabs["Visualize Data"],textvariable=self.__statistical_measure, width=30 , values=[] , state='readonly')
         self.__statistical_measure_combobox.pack(side='top' , pady=20 )
 
         visualize_button = ttk.Button(self.__nte.tabs["Visualize Data"] , text='Create' , command= lambda :self.__manager.generate_plot(plots[2] ,self.__plots_to_visualize.get(), self.__statistical_measure.get()))
         visualize_button.pack(side='top' , pady=20 )
-        
+
         plots = None
         def update_measures():
             measures = self.__manager.get_possible_measures( self.__plots_to_visualize.get(), plots[0])
@@ -488,12 +488,12 @@ class main_page:
 class Second_window:
     def __init__(self, master ,size , title):
         self.__master = master
-        self.__size = size 
+        self.__size = size
         self.__title = title
         self.__window = tk.Toplevel(self.__master)
         self.__window.geometry(self.__size)
-        self.__window.title(self.__title)       
-        
+        self.__window.title(self.__title)
+
     def del_win(self):
         self.__window.destroy()
 
@@ -510,7 +510,7 @@ class Notebook:
         self.__tabs = {}  # Dictionary to store tabs
         self.__notebook = ttk.Notebook(self.__master)
         self.__notebook.grid(row=0, column=1 , sticky="nswe" , padx=10 , pady=10)
-        self.__master.grid_columnconfigure(1, weight=1) 
+        self.__master.grid_columnconfigure(1, weight=1)
         self.__master.grid_rowconfigure(0, weight=1)
         Notebook._instances.append(self)
 
@@ -540,8 +540,9 @@ class Records:
     def __init__(self , master , rows ,columns , record_type  ,**kwargs ) -> None:
         self.__record_type = record_type
         self.__primary_keys = kwargs.get("primary_keys", None)
-        self.__search_term = kwargs.get("search_term", None)  
-        self.__table = kwargs.get("table", None)  
+        print(self.__primary_keys)
+        self.__search_term = kwargs.get("search_term", None)
+        self.__table = kwargs.get("table", None)
         self.__master = master
         self.__manager = kwargs.get("manager", None)
 
@@ -555,7 +556,7 @@ class Records:
         # Add horizontal scrollbar
         self.__tree_x_Scrollbar = ttk.Scrollbar(self.__treeframe , orient="horizontal")
         self.__tree_x_Scrollbar.pack(fill="x" , side="bottom")
-        
+
         # Create a Treeview widget
         self.__treeview = ttk.Treeview(self.__treeframe,show='headings', xscrollcommand=self.__tree_x_Scrollbar.set ,yscrollcommand= self.__tree_y_Scrollbar.set,  columns=columns ,height=len(rows))
         self.__treeview.pack()
@@ -572,15 +573,26 @@ class Records:
                 inner_elements = [item for item in inner_tuple]
                 values_to_insert = inner_elements + [element]
                 self.__treeview.insert("" , tk.END , values=values_to_insert)
-        elif self.__record_type =="Table" : 
+        elif self.__record_type =="Table" :
             for row in rows :
                 self.__treeview.insert("" , tk.END , values=row)
 
         self.__tree_y_Scrollbar.config(command=self.__treeview.yview)
         self.__tree_x_Scrollbar.config(command=self.__treeview.xview)
         self.__treeview.bind('<Double-1>', lambda event , headers=columns: self.click_on_row(self.__primary_keys , headers , self.__treeview.item(self.__treeview.selection())['values']))
-    
+
     def click_on_row(self , primary_keys, headers , selected_row):
+
+        row_data = list(zip(headers,selected_row))
+
+        print(primary_keys)
+        keys_values_couples = []
+
+        for couple in row_data :
+            for key in primary_keys :
+                if couple[0] == key :
+                    keys_values_couples.append(couple)
+
         if self.__record_type =="Table":
             self.__result_table= Second_window(self.__master ,"800x600" , "View Table")
             # Create a scrollable frame inside the window
@@ -618,10 +630,10 @@ class Records:
             inner_frame.bind("<Configure>", _configure_scroll_region)
 
             # Add a button to submit the changes
-            submit_button = ttk.Button(inner_frame, text="Update", command=... )
-            submit_button.pack(padx=300, pady=10 )
+            update_button = ttk.Button(inner_frame, text="Update", command= lambda :self.__manager.update_row(self.__table ,selected_row , headers,keys_values_couples) )
+            update_button.pack(padx=300, pady=10 )
 
-            delete_row_button = ttk.Button(inner_frame, text="Delete row ", command= self.__manager.delete_row(self.__table ,primary_keys))
+            delete_row_button = ttk.Button(inner_frame, text="Delete row ", command= lambda : self.__manager.delete_row(self.__table ,keys_values_couples))
             delete_row_button.pack(padx=300, pady=10 )
 
         if self.__record_type == "Search" :
@@ -629,17 +641,17 @@ class Records:
             table_col_couple = (selected_row[0], selected_row[1])
             columns,rows,prim_key = self.__manager.show_search_records(table_col_couple , self.__search_term)
             self.__column_tree = Records(self.__column_search.window,rows, columns, "Table" ,primary_keys = prim_key ,manager= self.__manager ,table =selected_row[0])
-            
+
 
 class SQL_Dump_Page :
     def __init__(self , master,type , manager , db , hostname,username,password , table=None) -> None:
         self.__master = master
         self.__type = type.title()
         self.__manager = manager
-        self.__db = db 
+        self.__db = db
         self.__table = table
-        self.__hostname = hostname 
-        self.__username = username 
+        self.__hostname = hostname
+        self.__username = username
         self.__password = password
         self.create_page()
 
@@ -673,10 +685,10 @@ class SQL_Dump_Page :
 
         def browse_folder():
             folder_selected = tk.filedialog.askdirectory()
-            self.__dump_path.set(folder_selected)
-            
+            self.__dump_path.set(rf'{folder_selected}')
+
         self.__browse_button = ttk.Button(self.__master, text="Browse", command=browse_folder )
-        self.__browse_button.grid(row=0, column=0, padx=150, pady=200, sticky="ne") 
+        self.__browse_button.grid(row=0, column=0, padx=150, pady=200, sticky="ne")
 
 
         self.__var_struct_data = tk.IntVar()
@@ -688,13 +700,13 @@ class SQL_Dump_Page :
         def dump_arg(var_struct_only, var_data_only, var_add_routines , var_add_events):
             options = []
             if var_struct_only.get() == 1:
-                options.append("--no-data") 
+                options.append("--no-data")
             if var_data_only.get() == 1:
-                options.append("--no-create-info") 
+                options.append("--no-create-info")
             if var_add_routines.get() == 1:
                 options.append("--routines")
             if var_add_events.get() == 1:
-                options.append("--events")  
+                options.append("--events")
 
             return options
 
@@ -719,7 +731,7 @@ class SQL_Dump_Page :
 
 class Search_Page:
     def __init__(self ,app ,manager ,type , db ,master ,table=None ) -> None:
-        self.__type = type.title() 
+        self.__type = type.title()
         self.__master = master
         self.__manager = manager
         self.__app = app
@@ -740,16 +752,16 @@ class Search_Page:
         self.__search_entry.grid(row=0, column=0, padx=10, pady=300, sticky="n")
         self.__search_button = ttk.Button(self.__master, text='Search', width=25, command=lambda: self.search())
         self.__search_button.grid(row=0, column=0, padx=40, pady=300, sticky="ne")
-    
+
     def search(self):
         self.__search_window = Second_window(self.__app, "800x600","View Search Results")
-        if self.__type == "Database": 
+        if self.__type == "Database":
             self.__search_tree = Records(self.__search_window.window ,self.__manager.search_database(self.__db, self.__search_term.get()) , ['Table' , 'Column' , 'matches'], "Search" , search_term = self.__search_term.get() , manager=self.__manager)
         else :
-            self.__columns , self.__rows = self.__manager.search_table(self.__search_term.get() , self.__db, self.__table) 
+            self.__columns , self.__rows = self.__manager.search_table(self.__search_term.get() , self.__db, self.__table)
             self.__primary_keys =self.__manager.get_prim_keys(self.__table)
             self.__search_tree = Records(self.__search_window.window , self.__rows , self.__columns , "Table" , manager= self.__manager , primary_keys = self.__primary_keys , table = self.__table)
-    
+
 class Operation:
     def __init__(self, master , type  , **kwargs) -> None:
         self.__frame = ttk.Frame(master, borderwidth=10, relief="solid", height=60)
@@ -758,17 +770,17 @@ class Operation:
 
         if type == "Label":
             self.__label = ttk.Label(self.__frame, text=kwargs["title"] , font=('Helvetica' , 12))
-            self.__label.pack(side='left',pady=kwargs["type_pady"] , padx =kwargs["type_padx"])        
+            self.__label.pack(side='left',pady=kwargs["type_pady"] , padx =kwargs["type_padx"])
         elif type == "Entry":
             self.__entry = ttk.Entry(self.__frame, textvariable=self.__var, width=60)
             self.__entry.pack(side='left', pady=kwargs["type_pady"], padx=kwargs["type_padx"])
         elif type == "Combobox" :
             self.__combobox = ttk.Combobox(self.__frame, textvariable=self.__var,  values=kwargs["values"] , width=30 , state='readonly')
             self.__combobox.pack(side='left',pady=kwargs["type_pady"] , padx =kwargs["type_padx"])
-        
+
         self.__button = ttk.Button(self.__frame, text=kwargs["bt_title"] ,width=50)
         self.__button.pack(side='right', padx=kwargs["bt_padx"] , pady=kwargs["but_pady"])
-        
+
     def set_button_command(self, command):
         self.__button.configure(command=command)
     @property
